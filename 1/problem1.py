@@ -28,7 +28,7 @@ def compute_Phi(x, p):
     ## INSERT YOUR CODE HERE
     n = x.shape[0]
     Phi = np.zeros(shape=(n, p))
-    for i in range(p):
+    for i in xrange(p):
         Phi[:, i] = np.asarray(x.T)[0] ** i
     Phi = np.asmatrix(Phi)
 

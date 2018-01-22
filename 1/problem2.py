@@ -1,7 +1,8 @@
 import math
 import numpy as np
+
 # Note: please don't add any new package, you should solve this problem using only the packages above.
-#-------------------------------------------------------------------------
+# -------------------------------------------------------------------------
 '''
     Problem 2: Support Vector Machine (with Linear Kernel)
     In this problem, you will implement the SVM classification method. 
@@ -10,7 +11,8 @@ import numpy as np
     Note: you cannot use any existing package for SVM. You need to implement your own version of SVM.
 '''
 
-#--------------------------
+
+# --------------------------
 def predict(X, w, b):
     '''
         Predict the labels of data instances.
@@ -25,18 +27,14 @@ def predict(X, w, b):
     '''
     #########################################
     ## INSERT YOUR CODE HERE
-    
-
-
-
-
-
-
+    y = X * w + b
+    for i in xrange(y.shape[0]):
+        y[i, 0] = 1 if y[i, 0] > 0 else -1
     #########################################
-    return y 
+    return y
 
 
-#--------------------------
+# --------------------------
 def subgradient(x, y, w, b, l=0.001):
     '''
         Compute the subgradient of loss function w.r.t. w and b (on one training instance).
@@ -55,16 +53,18 @@ def subgradient(x, y, w, b, l=0.001):
     '''
     #########################################
     ## INSERT YOUR CODE HERE
-
-
-
-
-
+    fx = x.T * w + b
+    if 1 - y * fx[0, 0] > 0:
+        dL_dw = l * w - y * x
+        dL_db = -y
+    else:
+        dL_dw = l * w
+        dL_db = 0
     #########################################
-    return dL_dw, dL_db 
+    return dL_dw, dL_db
 
 
-#--------------------------
+# --------------------------
 def update_w(w, dL_dw, lr=0.01):
     '''
         Update the parameter w using the subgradient.
@@ -78,14 +78,12 @@ def update_w(w, dL_dw, lr=0.01):
     '''
     #########################################
     ## INSERT YOUR CODE HERE
-
-
-
-
+    w = w - lr * dL_dw
     #########################################
-    return w 
+    return w
 
-#--------------------------
+
+# --------------------------
 def update_b(b, dL_db, lr=0.01):
     '''
         Update the parameter b using the subgradient.
@@ -98,17 +96,13 @@ def update_b(b, dL_db, lr=0.01):
     '''
     #########################################
     ## INSERT YOUR CODE HERE
-
-
-
-
+    b = b - lr * dL_db
     #########################################
     return b
 
 
-
-#--------------------------
-def train(X, Y, lr=0.01,C = 1., n_epoch = 10):
+# --------------------------
+def train(X, Y, lr=0.01, C=1., n_epoch=10):
     '''
         Train the SVM model using Stochastic Gradient Descent (SGD).
         Input:
@@ -122,26 +116,20 @@ def train(X, Y, lr=0.01,C = 1., n_epoch = 10):
             w: the weights of the SVM model, a numpy float vector of shape p by 1. 
             b: the bias of the SVM model, a float scalar.
     '''
-    n,p = X.shape
+    n, p = X.shape
 
-    #l: (lambda) = 1/ (n C), which is the weight of the L2 regularization term. 
-    l = 1./(n * C)
+    # l: (lambda) = 1/ (n C), which is the weight of the L2 regularization term.
+    l = 1. / (n * C)
 
-    w,b = np.asmatrix(np.zeros((p,1))), 0. # initialize the weight vector as all zeros
+    w, b = np.asmatrix(np.zeros((p, 1))), 0.  # initialize the weight vector as all zeros
     for _ in xrange(n_epoch):
         for i in xrange(n):
-            x = X[i].T # get the i-th instance in the dataset
-            y = float(Y[i]) 
+            x = X[i].T  # get the i-th instance in the dataset
+            y = float(Y[i])
             #########################################
             ## INSERT YOUR CODE HERE
-
-
-
-
-
+            dL_dw, dL_db = subgradient(x, y, w, b, l)
+            w = update_w(w, dL_dw, lr)
+            b = update_b(b, dL_db, lr)
             #########################################
-    return w,b
-
-
-
-
+    return w, b
