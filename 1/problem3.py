@@ -1,7 +1,8 @@
 import math
 import numpy as np
+
 # Note: please don't add any new package, you should solve this problem using only the packages above.
-#-------------------------------------------------------------------------
+# -------------------------------------------------------------------------
 '''
     Problem 3: Support Vector Machine (with non-linear kernels)
     In this problem, you will implement the SVM using SMO method.
@@ -9,7 +10,8 @@ import numpy as np
     Note: you cannot use any existing package for SVM. You need to implement your own version of SVM.
 '''
 
-#--------------------------
+
+# --------------------------
 def linear_kernel(X1, X2):
     '''
         Compute the linear kernel matrix between data instances in X1 and X2. 
@@ -24,13 +26,13 @@ def linear_kernel(X1, X2):
     '''
     #########################################
     ## INSERT YOUR CODE HERE
-
-
+    K = X1 * X2.T
     #########################################
-    return K 
+    return K
 
-#--------------------------
-def polynomial_kernel(X1, X2,d=2):
+
+# --------------------------
+def polynomial_kernel(X1, X2, d=2):
     '''
         Compute the polynomial kernel matrix between data instances in X1 and X2. 
         Input:
@@ -45,13 +47,13 @@ def polynomial_kernel(X1, X2,d=2):
     '''
     #########################################
     ## INSERT YOUR CODE HERE
-
-
+    K = np.asmatrix(np.asarray(1 + X1 * X2.T) ** d)
     #########################################
-    return K 
+    return K
 
-#--------------------------
-def gaussian_kernel(X1, X2,gamma=1.):
+
+# --------------------------
+def gaussian_kernel(X1, X2, gamma=1.):
     '''
         Compute the Gaussian (RBF) kernel matrix between data instances in X1 and X2. 
         Input:
@@ -66,19 +68,18 @@ def gaussian_kernel(X1, X2,gamma=1.):
     '''
     #########################################
     ## INSERT YOUR CODE HERE
-
-
-
-
-
-
-
-
+    n1 = X1.shape[0]
+    n2 = X2.shape[0]
+    K = np.zeros(shape=(n1, n2))
+    for i in xrange(n1):
+        for j in xrange(n2):
+            K[i, j] = np.exp(-(np.linalg.norm(X1[i] - X2[j]) ** 2) / (2 * gamma ** 2))
+    K = np.asmatrix(K)
     #########################################
-    return K 
+    return K
 
 
-#--------------------------
+# --------------------------
 def predict(K, a, y, b):
     '''
         Predict the labels of testing instances.
@@ -95,17 +96,15 @@ def predict(K, a, y, b):
     '''
     #########################################
     ## INSERT YOUR CODE HERE
-    
-
-
-
-
-
+    y_test = K * (np.asarray(a) * np.asarray(y)) + b
+    for i in xrange(y_test.shape[0]):
+        y_test[i, 0] = 1 if y_test[i, 0] > 0 else -1
     #########################################
     return y_test
 
-#--------------------------
-def compute_HL(ai,yi,aj,yj,C):
+
+# --------------------------
+def compute_HL(ai, yi, aj, yj, C):
     '''
         Compute the clipping range of a[i] when pairing with a[j]
         Input:
@@ -120,17 +119,18 @@ def compute_HL(ai,yi,aj,yj,C):
     '''
     #########################################
     ## INSERT YOUR CODE HERE
-
-
-
-
-
+    if yi == yj:
+        H = min(C, ai + aj)
+        L = max(0, ai + aj - C)
+    else:
+        H = min(C, ai - aj + C)
+        L = max(0, ai - aj)
     #########################################
-    return H, L 
+    return H, L
 
 
-#--------------------------
-def compute_E(Ki,a,y,b,i):
+# --------------------------
+def compute_E(Ki, a, y, b, i):
     '''
         Compute the error on the i-th instance: Ei = f(x[i]) - y[i] 
         Input:
@@ -145,16 +145,13 @@ def compute_E(Ki,a,y,b,i):
     '''
     #########################################
     ## INSERT YOUR CODE HERE
-
-
-
-
-
+    E = float((Ki * (np.asarray(a) * np.asarray(y)))[0, 0] + b - y[i, 0])
     #########################################
     return E
- 
-#--------------------------
-def compute_eta(Kii,Kjj,Kij):
+
+
+# --------------------------
+def compute_eta(Kii, Kjj, Kij):
     '''
         Compute the eta on the (i,j) pair of instances: eta = 2* Kij - Kii - Kjj
         Input:
@@ -166,17 +163,13 @@ def compute_eta(Kii,Kjj,Kij):
     '''
     #########################################
     ## INSERT YOUR CODE HERE
-
-
-
-
-
-
+    eta = 2 * Kij - Kii - Kjj
     #########################################
     return eta
-  
-#--------------------------
-def update_ai(Ei,Ej,eta,ai,yi,H,L):
+
+
+# --------------------------
+def update_ai(Ei, Ej, eta, ai, yi, H, L):
     '''
         Update the a[i] when considering the (i,j) pair of instances.
         Input:
@@ -192,18 +185,22 @@ def update_ai(Ei,Ej,eta,ai,yi,H,L):
     '''
     #########################################
     ## INSERT YOUR CODE HERE
-
-
-
-
-
-
+    if eta == 0:
+        ai_new = ai
+    else:
+        ai_star = ai - yi * (Ej - Ei) / eta
+        if ai_star > H:
+            ai_new = H
+        elif ai_star < L:
+            ai_new = L
+        else:
+            ai_new = ai_star
     #########################################
     return ai_new
-  
-  
-#--------------------------
-def update_aj(aj,ai,ai_new,yi,yj):
+
+
+# --------------------------
+def update_aj(aj, ai, ai_new, yi, yj):
     '''
         Update the a[j] when considering the (i,j) pair of instances.
         Input:
@@ -217,14 +214,13 @@ def update_aj(aj,ai,ai_new,yi,yj):
     '''
     #########################################
     ## INSERT YOUR CODE HERE
-    
-
+    aj_new = aj + yi * yj * (ai - ai_new)
     #########################################
     return aj_new
-  
- 
-#--------------------------
-def update_b(b,ai_new,aj_new,ai,aj,yi,yj,Ei,Ej,Kii,Kjj,Kij,C):
+
+
+# --------------------------
+def update_b(b, ai_new, aj_new, ai, aj, yi, yj, Ei, Ej, Kii, Kjj, Kij, C):
     '''
         Update the bias term.
         Input:
@@ -246,21 +242,20 @@ def update_b(b,ai_new,aj_new,ai,aj,yi,yj,Ei,Ej,Kii,Kjj,Kij,C):
     '''
     #########################################
     ## INSERT YOUR CODE HERE
-    
-
-
-
-
-
-
-
+    b1 = b - Ei - yj * (aj_new - aj) * Kij - yi * (ai_new - ai) * Kii
+    b2 = b - Ej - yj * (aj_new - aj) * Kjj - yi * (ai_new - ai) * Kij
+    if 0 < ai_new and ai_new < C:
+        b = b1
+    elif 0 < aj_new and aj_new < C:
+        b = b2
+    else:
+        b = (b1 + b2) / 2
     #########################################
-    return b 
-  
+    return b
 
- 
-#--------------------------
-def train(K, y, C = 1., n_epoch = 10):
+
+# --------------------------
+def train(K, y, C=1., n_epoch=10):
     '''
         Train the SVM model using simplified SMO algorithm.
         Input:
@@ -273,7 +268,7 @@ def train(K, y, C = 1., n_epoch = 10):
             b: the bias of the SVM model, a float scalar.
     '''
     n = K.shape[0]
-    a,b = np.asmatrix(np.zeros((n,1))), 0. 
+    a, b = np.asmatrix(np.zeros((n, 1))), 0.
     for _ in xrange(n_epoch):
         for i in xrange(n):
             for j in xrange(n):
@@ -285,26 +280,18 @@ def train(K, y, C = 1., n_epoch = 10):
                 ## INSERT YOUR CODE HERE
 
                 # compute the bounds of ai (H, L)
-
-
+                H, L = compute_HL(ai, yi, aj, yj, C)
                 # if H==L, no change is needed, skip to next j
-
-
+                if H == L:
+                    continue
                 # compute Ei and Ej
-
-
-
-                # compute eta 
-
-
+                Ei = compute_E(K[i], a, y, b, i)
+                Ej = compute_E(K[j], a, y, b, j)
+                # compute eta
+                eta = compute_eta(K[i, i], K[j, j], K[i, j])
                 # update ai, aj, and b
-
-
-
-
+                a[i, 0] = update_ai(Ei, Ej, eta, ai, yi, H, L)
+                a[j, 0] = update_aj(aj, ai, a[i, 0], yi, yj)
+                b = update_b(b, a[i, 0], a[j, 0], ai, aj, yi, yj, Ei, Ej, K[i, i], K[j, j], K[i, j], C)
                 #########################################
-    return a,b
-
-
-
-
+    return a, b

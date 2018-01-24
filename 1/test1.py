@@ -37,7 +37,7 @@ def test_least_square():
     y = np.mat('1.5;2.5;3.5')
     w = least_square(Phi,y)
     assert type(w) == np.matrixlib.defmatrix.matrix 
-    assert np.allclose(w, np.mat('2.5;1.'), atol = 1e-3) 
+    assert np.allclose(w, np.mat('2.5;1.'), atol = 1e-2) 
 
     for _ in xrange(20):
         p = np.random.randint(2,8)
@@ -64,7 +64,7 @@ def test_l2_least_square():
     y = np.mat('1.5;2.5;3.5')
     w = ridge_regression(Phi,y)
     assert type(w) == np.matrixlib.defmatrix.matrix 
-    assert np.allclose(w, np.mat('2.5;1.'), atol = 1e-3) 
+    assert np.allclose(w, np.mat('2.5;1.'), atol = 1e-2) 
 
     w = ridge_regression(Phi,y,alpha = 1000)
     assert np.allclose(w, np.mat('0.;0.'), atol = 1e-2) 
