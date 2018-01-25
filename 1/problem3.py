@@ -244,9 +244,9 @@ def update_b(b, ai_new, aj_new, ai, aj, yi, yj, Ei, Ej, Kii, Kjj, Kij, C):
     ## INSERT YOUR CODE HERE
     b1 = b - Ei - yj * (aj_new - aj) * Kij - yi * (ai_new - ai) * Kii
     b2 = b - Ej - yj * (aj_new - aj) * Kjj - yi * (ai_new - ai) * Kij
-    if 0 < ai_new and ai_new < C:
+    if 0 < ai_new < C:
         b = b1
-    elif 0 < aj_new and aj_new < C:
+    elif 0 < aj_new < C:
         b = b2
     else:
         b = (b1 + b2) / 2
