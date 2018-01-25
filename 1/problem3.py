@@ -272,10 +272,10 @@ def train(K, y, C=1., n_epoch=10):
     for _ in xrange(n_epoch):
         for i in xrange(n):
             for j in xrange(n):
-                ai = float(a[i])
-                aj = float(a[j])
-                yi = float(y[i])
-                yj = float(y[j])
+                ai = float(a[i, 0])
+                aj = float(a[j, 0])
+                yi = float(y[i, 0])
+                yj = float(y[j, 0])
                 #########################################
                 ## INSERT YOUR CODE HERE
 

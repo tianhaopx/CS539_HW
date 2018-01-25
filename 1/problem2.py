@@ -125,7 +125,7 @@ def train(X, Y, lr=0.01, C=1., n_epoch=10):
     for _ in xrange(n_epoch):
         for i in xrange(n):
             x = X[i].T  # get the i-th instance in the dataset
-            y = float(Y[i])
+            y = float(Y[i, 0])
             #########################################
             ## INSERT YOUR CODE HERE
             dL_dw, dL_db = subgradient(x, y, w, b, l)
