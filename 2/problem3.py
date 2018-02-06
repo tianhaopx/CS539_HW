@@ -1,7 +1,7 @@
 import numpy as np
 import math
 
-#-------------------------------------------------------------------------
+# -------------------------------------------------------------------------
 '''
     Problem 3: softmax regression 
     In this problem, you will implement the softmax regression for multi-class classification problems.
@@ -46,12 +46,13 @@ import math
             n_epoch: the number of passes to go through the training dataset in order to train the model, an integer scalar.
 '''
 
-#-----------------------------------------------------------------
-# Forward Pass 
-#-----------------------------------------------------------------
 
-#-----------------------------------------------------------------
-def compute_z(x,W,b):
+# -----------------------------------------------------------------
+# Forward Pass 
+# -----------------------------------------------------------------
+
+# -----------------------------------------------------------------
+def compute_z(x, W, b):
     '''
         Compute the linear logit values of a data instance. z =  W x + b
         Input:
@@ -64,16 +65,13 @@ def compute_z(x,W,b):
     '''
     #########################################
     ## INSERT YOUR CODE HERE
-
-
-
-
+    z = W * x + b
 
     #########################################
-    return z 
+    return z
 
 
-#-----------------------------------------------------------------
+# -----------------------------------------------------------------
 def compute_a(z):
     '''
         Compute the softmax activations.
@@ -84,17 +82,14 @@ def compute_a(z):
     '''
     #########################################
     ## INSERT YOUR CODE HERE
-
-
-
-
-
+    a = (np.exp(z - np.max(z) / 2)) / (np.sum(np.exp(z - np.max(z) / 2).T))
 
     #########################################
     return a
 
-#-----------------------------------------------------------------
-def compute_L(a,y):
+
+# -----------------------------------------------------------------
+def compute_L(a, y):
     '''
         Compute multi-class cross entropy, which is the loss function of softmax regression. 
         Input:
@@ -105,15 +100,14 @@ def compute_L(a,y):
     '''
     #########################################
     ## INSERT YOUR CODE HERE
-
-
-
+    L = float(-np.log(a[y]))
 
     #########################################
-    return L 
+    return L
 
-#-----------------------------------------------------------------
-def forward(x,y,W,b):
+
+# -----------------------------------------------------------------
+def forward(x, y, W, b):
     '''
        Forward pass: given an instance in the training data, compute the logits z, activations a and multi-class cross entropy L on the instance.
         Input:
@@ -128,20 +122,20 @@ def forward(x,y,W,b):
     '''
     #########################################
     ## INSERT YOUR CODE HERE
-
-
+    z = compute_z(x, W, b)
+    a = compute_a(z)
+    L = compute_L(a, y)
 
     #########################################
-    return z, a, L 
+    return z, a, L
 
 
-#-----------------------------------------------------------------
+# -----------------------------------------------------------------
 # Compute Local Gradients
-#-----------------------------------------------------------------
+# -----------------------------------------------------------------
 
 
-
-#-----------------------------------------------------------------
+# -----------------------------------------------------------------
 def compute_dL_da(a, y):
     '''
         Compute local gradient of the multi-class cross-entropy loss function w.r.t. the activations.
@@ -154,17 +148,23 @@ def compute_dL_da(a, y):
     '''
     #########################################
     ## INSERT YOUR CODE HERE     
-
-
-
-
-
+    c = a.shape[0]
+    dL_da = np.zeros(shape=(c, 1))
+    for i in xrange(c):
+        if i == y:
+            try:
+                dL_da[i] = -1. / float(a[i])
+            except ZeroDivisionError:
+                dL_da[i] = float(-1e6)
+        else:
+            dL_da[i] = 0
+    dL_da = np.asmatrix(dL_da)
 
     #########################################
-    return dL_da 
+    return dL_da
 
 
-#-----------------------------------------------------------------
+# -----------------------------------------------------------------
 def compute_da_dz(a):
     '''
         Compute local gradient of the softmax activations a w.r.t. the logits z.
@@ -178,16 +178,21 @@ def compute_da_dz(a):
     '''
     #########################################
     ## INSERT YOUR CODE HERE
-
-
-
-
+    c = a.shape[0]
+    da_dz = np.zeros(shape=(c, c))
+    for i in xrange(c):
+        for j in xrange(c):
+            if i == j:
+                da_dz[i, j] = a[i] * (1 - a[i])
+            else:
+                da_dz[i, j] = -a[i] * a[j]
+    da_dz = np.asmatrix(da_dz)
     #########################################
-    return da_dz 
+    return da_dz
 
 
-#-----------------------------------------------------------------
-def compute_dz_dW(x,c):
+# -----------------------------------------------------------------
+def compute_dz_dW(x, c):
     '''
         Compute local gradient of the logits function z w.r.t. the weights W.
         Input:
@@ -200,17 +205,16 @@ def compute_dz_dW(x,c):
     '''
     #########################################
     ## INSERT YOUR CODE HERE
-
-
-
-
+    p = x.shape[0]
+    dz_dW = np.zeros(shape=(c, p))
+    for i in xrange(c):
+        dz_dW[i] = x.T[:]
+    dz_dW = np.asmatrix(dz_dW)
     #########################################
     return dz_dW
 
 
-
-
-#-----------------------------------------------------------------
+# -----------------------------------------------------------------
 def compute_dz_db(c):
     '''
         Compute local gradient of the logits function z w.r.t. the biases b. 
@@ -223,20 +227,17 @@ def compute_dz_db(c):
     '''
     #########################################
     ## INSERT YOUR CODE HERE
-
-
-
-
+    dz_db = np.asmatrix(np.ones(shape=(c, 1)))
     #########################################
     return dz_db
 
 
-#-----------------------------------------------------------------
+# -----------------------------------------------------------------
 # Back Propagation 
-#-----------------------------------------------------------------
+# -----------------------------------------------------------------
 
-#-----------------------------------------------------------------
-def backward(x,y,a):
+# -----------------------------------------------------------------
+def backward(x, y, a):
     '''
        Back Propagation: given an instance in the training data, compute the local gradients of the logits z, activations a, weights W and biases b on the instance. 
         Input:
@@ -255,15 +256,16 @@ def backward(x,y,a):
     '''
     #########################################
     ## INSERT YOUR CODE HERE
-
-
-
-
+    dL_da = compute_dL_da(a, y)
+    da_dz = compute_da_dz(a)
+    dz_dW = compute_dz_dW(x, a.shape[0])
+    dz_db = compute_dz_db(a.shape[0])
     #########################################
     return dL_da, da_dz, dz_dW, dz_db
 
-#-----------------------------------------------------------------
-def compute_dL_dz(dL_da,da_dz):
+
+# -----------------------------------------------------------------
+def compute_dL_dz(dL_da, da_dz):
     '''
        Given the local gradients, compute the gradient of the loss function L w.r.t. the logits z using chain rule.
         Input:
@@ -277,15 +279,13 @@ def compute_dL_dz(dL_da,da_dz):
     '''
     #########################################
     ## INSERT YOUR CODE HERE
-
-
-
+    dL_dz = da_dz * dL_da
     #########################################
     return dL_dz
 
 
-#-----------------------------------------------------------------
-def compute_dL_dW(dL_dz,dz_dW):
+# -----------------------------------------------------------------
+def compute_dL_dW(dL_dz, dz_dW):
     '''
        Given the local gradients, compute the gradient of the loss function L w.r.t. the weights W using chain rule. 
         Input:
@@ -301,17 +301,13 @@ def compute_dL_dW(dL_dz,dz_dW):
     '''
     #########################################
     ## INSERT YOUR CODE HERE
-
-
-
-
+    dL_dW = np.multiply(dL_dz, dz_dW)
     #########################################
     return dL_dW
 
 
-
-#-----------------------------------------------------------------
-def compute_dL_db(dL_dz,dz_db):
+# -----------------------------------------------------------------
+def compute_dL_db(dL_dz, dz_db):
     '''
        Given the local gradients, compute the gradient of the loss function L w.r.t. the biases b using chain rule.
         Input:
@@ -326,19 +322,16 @@ def compute_dL_db(dL_dz,dz_db):
     '''
     #########################################
     ## INSERT YOUR CODE HERE
-
-
-
-
-
+    dL_db = np.multiply(dL_dz, dz_db)
     #########################################
-    return dL_db 
+    return dL_db
 
-#-----------------------------------------------------------------
+
+# -----------------------------------------------------------------
 # gradient descent 
-#-----------------------------------------------------------------
+# -----------------------------------------------------------------
 
-#--------------------------
+# --------------------------
 def update_W(W, dL_dW, alpha=0.001):
     '''
        Update the weights W using gradient descent.
@@ -351,20 +344,15 @@ def update_W(W, dL_dW, alpha=0.001):
             W: the updated weight matrix, a numpy float matrix of shape (c by p).
         Hint: you could solve this problem using 1 line of code 
     '''
-    
+
     #########################################
     ## INSERT YOUR CODE HERE
-
-
-
-
-
+    W = W - alpha * dL_dW
     #########################################
     return W
 
 
-
-#--------------------------
+# --------------------------
 def update_b(b, dL_db, alpha=0.001):
     '''
        Update the biases b using gradient descent.
@@ -377,16 +365,15 @@ def update_b(b, dL_db, alpha=0.001):
             b: the updated of bias vector, a float numpy vector of shape c by 1. 
         Hint: you could solve this problem using 1 lines of code 
     '''
-    
+
     #########################################
     ## INSERT YOUR CODE HERE
-    
-
+    b = b - alpha * dL_db
     #########################################
-    return b 
+    return b
 
 
-#--------------------------
+# --------------------------
 # train
 def train(X, Y, alpha=0.01, n_epoch=100):
     '''
@@ -406,36 +393,32 @@ def train(X, Y, alpha=0.01, n_epoch=100):
     c = max(Y) + 1
 
     # initialize W and b as 0
-    W = np.asmatrix(np.zeros((c,p)))
-    b= np.asmatrix(np.zeros((c,1)))
+    W = np.asmatrix(np.zeros((c, p)))
+    b = np.asmatrix(np.zeros((c, 1)))
 
     for _ in xrange(n_epoch):
         # go through each training instance
-        for x,y in zip(X,Y):
-            x = x.T # convert to column vector
+        for x, y in zip(X, Y):
+            x = x.T  # convert to column vector
             #########################################
             ## INSERT YOUR CODE HERE
 
             # Forward pass: compute the logits, softmax and cross_entropy 
-
-
-            
+            z, a, L = forward(x, y, W, b)
             # Back Propagation: compute local gradients of cross_entropy, softmax and logits
-
-
-
-            # compute the global gradients using chain rule 
-
-
-
+            dL_da, da_dz, dz_dW, dz_db = backward(x, y, a)
+            # compute the global gradients using chain rule
+            dL_dz = compute_dL_dz(dL_da, da_dz)
+            dL_dW = compute_dL_dW(dL_dz, dz_dW)
+            dL_db = compute_dL_db(dL_dz, dz_db)
             # update the paramters using gradient descent
-
-
-
+            W = update_W(W, dL_dW, alpha)
+            b = update_b(b, dL_db, alpha)
             #########################################
     return W, b
 
-#--------------------------
+
+# --------------------------
 def predict(Xtest, W, b):
     '''
        Predict the labels of the instances in a test dataset using softmax regression.
@@ -450,25 +433,24 @@ def predict(Xtest, W, b):
     '''
     n = Xtest.shape[0]
     c = W.shape[0]
-    Y = np.zeros(n) # initialize as all zeros
-    P = np.asmatrix(np.zeros((n,c)))  
+    Y = np.zeros(n)  # initialize as all zeros
+    P = np.asmatrix(np.zeros((n, c)))
     for i, x in enumerate(Xtest):
-        x = x.T # convert to column vector
+        x = x.T  # convert to column vector
         #########################################
         ## INSERT YOUR CODE HERE
-
-
-
+        P[i] = compute_a(compute_z(x, W, b)).T
+        Y[i] = np.argmax(P[i])
         #########################################
-    return Y, P 
+    return Y, P
 
 
-#-----------------------------------------------------------------
+# -----------------------------------------------------------------
 # gradient checking 
-#-----------------------------------------------------------------
+# -----------------------------------------------------------------
 
 
-#-----------------------------------------------------------------
+# -----------------------------------------------------------------
 def check_da_dz(z, delta=1e-7):
     '''
         Compute local gradient of the softmax function using gradient checking.
@@ -479,16 +461,17 @@ def check_da_dz(z, delta=1e-7):
             da_dz: the approximated local gradient of the activations w.r.t. the logits, a float numpy matrix of shape (c by c). 
                    The (i,j)-th element represents the partial gradient ( d a[i]  / d z[j] )
     '''
-    c = z.shape[0] # number of classes
-    da_dz = np.asmatrix(np.zeros((c,c)))
+    c = z.shape[0]  # number of classes
+    da_dz = np.asmatrix(np.zeros((c, c)))
     for i in xrange(c):
         for j in xrange(c):
-            d = np.asmatrix(np.zeros((c,1)))
+            d = np.asmatrix(np.zeros((c, 1)))
             d[j] = delta
-            da_dz[i,j] = (compute_a(z+d)[i,0] - compute_a(z)[i,0]) / delta
-    return da_dz 
+            da_dz[i, j] = (compute_a(z + d)[i, 0] - compute_a(z)[i, 0]) / delta
+    return da_dz
 
-#-----------------------------------------------------------------
+
+# -----------------------------------------------------------------
 def check_dL_da(a, y, delta=1e-7):
     '''
         Compute local gradient of the multi-class cross-entropy function w.r.t. the activations using gradient checking.
@@ -499,16 +482,17 @@ def check_dL_da(a, y, delta=1e-7):
         Output:
             dL_da: the approximated local gradients of the loss function w.r.t. the activations, a float numpy vector of shape c by 1.
     '''
-    c = a.shape[0] # number of classes
-    dL_da = np.asmatrix(np.zeros((c,1))) # initialize the vector as all zeros
+    c = a.shape[0]  # number of classes
+    dL_da = np.asmatrix(np.zeros((c, 1)))  # initialize the vector as all zeros
     for i in xrange(c):
-        d = np.asmatrix(np.zeros((c,1)))
+        d = np.asmatrix(np.zeros((c, 1)))
         d[i] = delta
-        dL_da[i] = ( compute_L(a+d,y) 
-                        - compute_L(a,y)) / delta
-    return dL_da 
+        dL_da[i] = (compute_L(a + d, y)
+                    - compute_L(a, y)) / delta
+    return dL_da
 
-#--------------------------
+
+# --------------------------
 def check_dz_dW(x, W, b, delta=1e-7):
     '''
         compute the local gradient of the logit function using gradient check.
@@ -521,17 +505,17 @@ def check_dz_dW(x, W, b, delta=1e-7):
             dz_dW: the approximated local gradient of the logits w.r.t. the weight matrix computed by gradient checking, a numpy float matrix of shape (c by p). 
                    The i,j -th element of dz_dW represents the partial gradient of the i-th logit (z[i]) w.r.t. the weight W[i,j]:   d_z[i] / d_W[i,j]
     '''
-    c,p = W.shape # number of classes and features
-    dz_dW = np.asmatrix(np.zeros((c,p)))
+    c, p = W.shape  # number of classes and features
+    dz_dW = np.asmatrix(np.zeros((c, p)))
     for i in xrange(c):
         for j in xrange(p):
-            d = np.asmatrix(np.zeros((c,p)))
-            d[i,j] = delta
-            dz_dW[i,j] = (compute_z(x,W+d, b)[i,0] - compute_z(x, W, b))[i,0] / delta
+            d = np.asmatrix(np.zeros((c, p)))
+            d[i, j] = delta
+            dz_dW[i, j] = (compute_z(x, W + d, b)[i, 0] - compute_z(x, W, b))[i, 0] / delta
     return dz_dW
 
 
-#--------------------------
+# --------------------------
 def check_dz_db(x, W, b, delta=1e-7):
     '''
         compute the local gradient of the logit function using gradient check.
@@ -544,17 +528,17 @@ def check_dz_db(x, W, b, delta=1e-7):
             dz_db: the approximated local gradient of the logits w.r.t. the biases using gradient check, a float vector of shape c by 1.
                    Each element dz_db[i] represents the partial gradient of the i-th logit z[i] w.r.t. the i-th bias:  d_z[i] / d_b[i]
     '''
-    c,p = W.shape # number of classes and features
-    dz_db = np.asmatrix(np.zeros((c,1)))
+    c, p = W.shape  # number of classes and features
+    dz_db = np.asmatrix(np.zeros((c, 1)))
     for i in xrange(c):
-        d = np.asmatrix(np.zeros((c,1))) 
+        d = np.asmatrix(np.zeros((c, 1)))
         d[i] = delta
-        dz_db[i] = (compute_z(x,W, b+d)[i,0] - compute_z(x, W, b)[i,0]) / delta
+        dz_db[i] = (compute_z(x, W, b + d)[i, 0] - compute_z(x, W, b)[i, 0]) / delta
     return dz_db
 
 
-#-----------------------------------------------------------------
-def check_dL_dW(x,y,W,b,delta=1e-7):
+# -----------------------------------------------------------------
+def check_dL_dW(x, y, W, b, delta=1e-7):
     '''
        Compute the gradient of the loss function w.r.t. the weights W using gradient checking.
         Input:
@@ -566,18 +550,18 @@ def check_dL_dW(x,y,W,b,delta=1e-7):
         Output:
             dL_dW: the approximated gradients of the loss function w.r.t. the weight matrix, a numpy float matrix of shape (c by p). 
     '''
-    c, p = W.shape    
-    dL_dW = np.asmatrix(np.zeros((c,p)))
+    c, p = W.shape
+    dL_dW = np.asmatrix(np.zeros((c, p)))
     for i in xrange(c):
         for j in xrange(p):
-            d = np.asmatrix(np.zeros((c,p)))
-            d[i,j] = delta
-            dL_dW[i,j] = ( forward(x,y,W+d,b)[-1] - forward(x,y,W,b)[-1] ) / delta
+            d = np.asmatrix(np.zeros((c, p)))
+            d[i, j] = delta
+            dL_dW[i, j] = (forward(x, y, W + d, b)[-1] - forward(x, y, W, b)[-1]) / delta
     return dL_dW
 
 
-#-----------------------------------------------------------------
-def check_dL_db(x,y,W,b,delta=1e-7):
+# -----------------------------------------------------------------
+def check_dL_db(x, y, W, b, delta=1e-7):
     '''
        Compute the gradient of the loss function w.r.t. the bias b using gradient checking.
         Input:
@@ -589,11 +573,10 @@ def check_dL_db(x,y,W,b,delta=1e-7):
         Output:
             dL_db: the approxmiated gradients of the loss function w.r.t. the biases, a float vector of shape c by 1.
     '''
-    c, p = W.shape    
-    dL_db = np.asmatrix(np.zeros((c,1)))
+    c, p = W.shape
+    dL_db = np.asmatrix(np.zeros((c, 1)))
     for i in xrange(c):
-        d = np.asmatrix(np.zeros((c,1)))
+        d = np.asmatrix(np.zeros((c, 1)))
         d[i] = delta
-        dL_db[i] = ( forward(x,y,W,b+d)[-1] - forward(x,y,W,b)[-1] ) / delta
-    return dL_db 
-
+        dL_db[i] = (forward(x, y, W, b + d)[-1] - forward(x, y, W, b)[-1]) / delta
+    return dL_db
