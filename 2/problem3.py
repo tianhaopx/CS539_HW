@@ -82,8 +82,11 @@ def compute_a(z):
     '''
     #########################################
     ## INSERT YOUR CODE HERE
-    a = (np.exp(z - np.max(z) / 2)) / (np.sum(np.exp(z - np.max(z) / 2).T))
-
+    try:
+        a = (np.exp(z - np.max(z))) / (np.sum(np.exp(z - np.max(z)).T))
+    except FloatingPointError:
+        a = np.asmatrix(np.zeros(shape=z.shape))
+        a[np.argmax(z)] = 1.
     #########################################
     return a
 
@@ -100,7 +103,10 @@ def compute_L(a, y):
     '''
     #########################################
     ## INSERT YOUR CODE HERE
-    L = float(-np.log(a[y]))
+    try:
+        L = float(-np.log(a[y]))
+    except FloatingPointError:
+        L = float('Inf')
 
     #########################################
     return L
@@ -208,7 +214,7 @@ def compute_dz_dW(x, c):
     p = x.shape[0]
     dz_dW = np.zeros(shape=(c, p))
     for i in xrange(c):
-        dz_dW[i] = x.T[:]
+        dz_dW[i] = x.T.copy()
     dz_dW = np.asmatrix(dz_dW)
     #########################################
     return dz_dW

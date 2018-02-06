@@ -1,9 +1,10 @@
 import math
 import numpy as np
-#-----------------------------------------------------------------------
+# -----------------------------------------------------------------------
 # You could re-use your code in Problem 3.
-import problem3 as sr # sr = softmax regression 
-#-------------------------------------------------------------------------
+import problem3 as sr  # sr = softmax regression
+
+# -------------------------------------------------------------------------
 '''
     Problem 4: two-layer fully connected neural network. 
     In this problem, you will implement a classification method using fully-connected neural network (FC) with two layers.
@@ -79,12 +80,13 @@ import problem3 as sr # sr = softmax regression
             n_epoch: the number of passes to go through the training set, an integer scalar.
 '''
 
-#-----------------------------------------------------------------
-# Forward Pass 
-#-----------------------------------------------------------------
 
-#-----------------------------------------------------------------
-def compute_z1(x,W1,b1):
+# -----------------------------------------------------------------
+# Forward Pass 
+# -----------------------------------------------------------------
+
+# -----------------------------------------------------------------
+def compute_z1(x, W1, b1):
     '''
         Compute the linear logit values of a data instance in the first layer. z1 =  W1 x + b1
         Input:
@@ -97,15 +99,13 @@ def compute_z1(x,W1,b1):
     '''
     #########################################
     ## INSERT YOUR CODE HERE
-
-
-
+    z1 = sr.compute_z(x, W1, b1)
 
     #########################################
     return z1
 
 
-#-----------------------------------------------------------------
+# -----------------------------------------------------------------
 def compute_a1(z1):
     '''
         Compute the sigmoid activations a1 from the linear logits z1 in the first layer. 
@@ -120,15 +120,20 @@ def compute_a1(z1):
     '''
     #########################################
     ## INSERT YOUR CODE HERE
-
-
-
+    a1 = np.zeros(shape=(z1.shape[0], 1))
+    for i in xrange(z1.shape[0]):
+        try:
+            a1[i] = float(1. / (1 + np.exp(-z1[i])))
+        except FloatingPointError:
+            a1[i] = 1 if z1[i] >= 0 else 0
+    a1 = np.asmatrix(a1)
 
     #########################################
-    return a1 
+    return a1
 
-#-----------------------------------------------------------------
-def compute_z2(a1,W2,b2):
+
+# -----------------------------------------------------------------
+def compute_z2(a1, W2, b2):
     '''
         Compute the linear logit values of a data instance in the first layer. z1 =  W1 x + b1
         Input:
@@ -140,17 +145,12 @@ def compute_z2(a1,W2,b2):
     '''
     #########################################
     ## INSERT YOUR CODE HERE
-
-
-
-
-
+    z2 = sr.compute_z(a1, W2, b2)
     #########################################
     return z2
 
 
-
-#-----------------------------------------------------------------
+# -----------------------------------------------------------------
 def compute_a2(z2):
     '''
         Compute the softmax activations a2 from the linear logits z2 in the second layer. 
@@ -163,15 +163,12 @@ def compute_a2(z2):
     '''
     #########################################
     ## INSERT YOUR CODE HERE
-
-
-
-
+    a2 = sr.compute_a(z2)
     #########################################
-    return a2 
+    return a2
 
 
-#-----------------------------------------------------------------
+# -----------------------------------------------------------------
 def forward(x, W1, b1, W2, b2):
     '''
        Forward pass: given an instance in the training data, compute the logits z, activations a in each layer. 
@@ -192,22 +189,20 @@ def forward(x, W1, b1, W2, b2):
     ## INSERT YOUR CODE HERE
 
     # first layer
-
-
-
+    z1 = compute_z1(x, W1, b1)
+    a1 = compute_a1(z1)
     # second layer
-
-
-
+    z2 = compute_z2(a1, W2, b2)
+    a2 = compute_a2(z2)
     #########################################
     return z1, a1, z2, a2
 
 
-#-----------------------------------------------------------------
+# -----------------------------------------------------------------
 # Compute Local Gradients
-#-----------------------------------------------------------------
+# -----------------------------------------------------------------
 
-#-----------------------------------------------------------------
+# -----------------------------------------------------------------
 def compute_dL_da2(a2, y):
     '''
         Compute local gradient of the multi-class cross-entropy loss function L w.r.t. the activations a2 in the 2nd layer.
@@ -220,13 +215,12 @@ def compute_dL_da2(a2, y):
     '''
     #########################################
     ## INSERT YOUR CODE HERE
-
-
-
+    dL_da2 = sr.compute_dL_da(a2, y)
     #########################################
     return dL_da2
 
-#-----------------------------------------------------------------
+
+# -----------------------------------------------------------------
 def compute_da2_dz2(a2):
     '''
         Compute local gradient of the softmax activations a2 w.r.t. the logits z2 in the 2nd layer.
@@ -238,15 +232,13 @@ def compute_da2_dz2(a2):
     '''
     #########################################
     ## INSERT YOUR CODE HERE
-
-
-
+    da2_dz2 = sr.compute_da_dz(a2)
     #########################################
-    return da2_dz2 
+    return da2_dz2
 
 
-#-----------------------------------------------------------------
-def compute_dz2_dW2(a1,c):
+# -----------------------------------------------------------------
+def compute_dz2_dW2(a1, c):
     '''
         Compute local gradient of the logits function z2 w.r.t. the weights W2. 
         Input:
@@ -257,14 +249,12 @@ def compute_dz2_dW2(a1,c):
     '''
     #########################################
     ## INSERT YOUR CODE HERE
-
-
-
+    dz2_dW2 = sr.compute_dz_dW(a1, c)
     #########################################
     return dz2_dW2
 
 
-#-----------------------------------------------------------------
+# -----------------------------------------------------------------
 def compute_dz2_db2(c):
     '''
         Compute local gradient of the logits function z2 w.r.t. the biases b2. 
@@ -276,13 +266,12 @@ def compute_dz2_db2(c):
     '''
     #########################################
     ## INSERT YOUR CODE HERE
-
-
+    dz2_db2 = sr.compute_dz_db(c)
     #########################################
     return dz2_db2
 
 
-#-----------------------------------------------------------------
+# -----------------------------------------------------------------
 def compute_dz2_da1(W2):
     '''
         Compute local gradient of the logits z2 w.r.t. the activations a1.
@@ -295,15 +284,12 @@ def compute_dz2_da1(W2):
     '''
     #########################################
     ## INSERT YOUR CODE HERE
-   
-
-
- 
+    dz2_da1 = W2.copy()
     #########################################
-    return dz2_da1 
+    return dz2_da1
 
 
-#-----------------------------------------------------------------
+# -----------------------------------------------------------------
 def compute_da1_dz1(a1):
     '''
         Compute local gradient of the sigmoid activations a1 w.r.t. the logits z1 in the first layer.
@@ -317,16 +303,13 @@ def compute_da1_dz1(a1):
     '''
     #########################################
     ## INSERT YOUR CODE HERE
-
-
-
-
+    da1_dz1 = np.multiply(a1, (1 - a1))
     #########################################
-    return da1_dz1 
+    return da1_dz1
 
 
-#-----------------------------------------------------------------
-def compute_dz1_dW1(x,h):
+# -----------------------------------------------------------------
+def compute_dz1_dW1(x, h):
     '''
         Compute local gradient of the logits function z1 w.r.t. the weights W1 in the 1st layer. 
         Input:
@@ -338,14 +321,15 @@ def compute_dz1_dW1(x,h):
     '''
     #########################################
     ## INSERT YOUR CODE HERE
-
-
-
+    dz1_dW1 = np.zeros(shape=(h, x.shape[0]))
+    for i in xrange(h):
+        dz1_dW1[i] = x.T.copy()
+    dz1_dW1 = np.asmatrix(dz1_dW1)
     #########################################
     return dz1_dW1
 
 
-#-----------------------------------------------------------------
+# -----------------------------------------------------------------
 def compute_dz1_db1(h):
     '''
         Compute local gradient of the logits function z2 w.r.t. the biases b2. 
@@ -357,15 +341,13 @@ def compute_dz1_db1(h):
     '''
     #########################################
     ## INSERT YOUR CODE HERE
-
-
-
-
+    dz1_db1 = np.asmatrix(np.ones(shape=(h, 1)))
     #########################################
     return dz1_db1
 
-#-----------------------------------------------------------------
-def backward(x,y,a1,a2,W2):
+
+# -----------------------------------------------------------------
+def backward(x, y, a1, a2, W2):
     '''
        Back Propagation: given an instance in the training data, compute the local gradients of the logits z, activations a, weights W and biases b in the two layers. 
         Input:
@@ -387,24 +369,25 @@ def backward(x,y,a1,a2,W2):
     ## INSERT YOUR CODE HERE
 
     # 2nd layer
-
-
-
+    dL_da2 = compute_dL_da2(a2, y)
+    da2_dz2 = compute_da2_dz2(a2)
+    dz2_dW2 = compute_dz2_dW2(a1, a2.shape[0])
+    dz2_db2 = compute_dz2_db2(a2.shape[0])
+    dz2_da1 = compute_dz2_da1(W2)
     # 1st layer
-
-
-
-
-
+    da1_dz1 = compute_da1_dz1(a1)
+    dz1_dW1 = compute_dz1_dW1(x, a1.shape[0])
+    dz1_db1 = compute_dz1_db1(a1.shape[0])
     #########################################
     return dL_da2, da2_dz2, dz2_dW2, dz2_db2, dz2_da1, da1_dz1, dz1_dW1, dz1_db1
 
-#-----------------------------------------------------------------
-# Back Propagation 
-#-----------------------------------------------------------------
 
-#-----------------------------------------------------------------
-def compute_dL_da1(dL_dz2,dz2_da1):
+# -----------------------------------------------------------------
+# Back Propagation 
+# -----------------------------------------------------------------
+
+# -----------------------------------------------------------------
+def compute_dL_da1(dL_dz2, dz2_da1):
     '''
         Compute local gradient of the loss function L w.r.t. the activations a1 using chain rule.
         Input:
@@ -416,14 +399,13 @@ def compute_dL_da1(dL_dz2,dz2_da1):
     '''
     #########################################
     ## INSERT YOUR CODE HERE
-
-
+    dL_da1 = dz2_da1.T * dL_dz2
     #########################################
     return dL_da1
 
 
-#-----------------------------------------------------------------
-def compute_dL_dz1(dL_da1,da1_dz1):
+# -----------------------------------------------------------------
+def compute_dL_dz1(dL_da1, da1_dz1):
     '''
         Compute local gradient of the loss function L w.r.t. the logits z1 using chain rule.
        (2 points)
@@ -436,12 +418,12 @@ def compute_dL_dz1(dL_da1,da1_dz1):
     '''
     #########################################
     ## INSERT YOUR CODE HERE
-
-
+    dL_dz1 = np.multiply(dL_da1, da1_dz1)
     #########################################
     return dL_dz1
 
-#-----------------------------------------------------------------
+
+# -----------------------------------------------------------------
 def compute_gradients(dL_da2, da2_dz2, dz2_dW2, dz2_db2, dz2_da1, da1_dz1, dz1_dW1, dz1_db1):
     '''
        Given the local gradients, compute the gradient of the loss function L w.r.t. model parameters: the weights W1, W2 and biases b1 and b2.
@@ -453,26 +435,27 @@ def compute_gradients(dL_da2, da2_dz2, dz2_dW2, dz2_db2, dz2_da1, da1_dz1, dz1_d
             dL_db1: the gradient of the loss function L w.r.t. the biases b1
         Hint: you could re-use the functions in problem2, such as sr.compute_dL_dz(...) 
     '''
-    
+
     #########################################
     ## INSERT YOUR CODE HERE
 
-    # the 2nd layer 
-
-
-
-    # the 1st layer 
-
-
-
+    # the 2nd layer
+    dL_dz2 = da2_dz2 * dL_da2
+    dL_dW2 = np.multiply(dL_dz2, dz2_dW2)
+    dL_db2 = np.multiply(dL_dz2, dz2_db2)
+    # the 1st layer
+    dL_da1 = compute_dL_da1(dL_dz2, dz2_da1)
+    dL_dz1 = compute_dL_dz1(dL_da1, da1_dz1)
+    dL_dW1 = np.multiply(dL_dz1, dz1_dW1)
+    dL_db1 = np.multiply(dL_dz1, dz1_db1)
     #########################################
 
     return dL_dW2, dL_db2, dL_dW1, dL_db1
 
 
-#--------------------------
+# --------------------------
 # train
-def train(X, Y,h=3, n_layers=3, alpha=0.01, n_epoch=100):
+def train(X, Y, h=3, n_layers=3, alpha=0.01, n_epoch=100):
     '''
        Given a training dataset, train the FC model by iteratively updating the weights W and biases b using the gradients computed over each data instance. 
         Input:
@@ -494,35 +477,36 @@ def train(X, Y,h=3, n_layers=3, alpha=0.01, n_epoch=100):
     c = max(Y) + 1
 
     # initialize W and b as 0
-    W1 = np.asmatrix(np.zeros((h,p)))
-    b1 = np.asmatrix(np.zeros((h,1)))
-    W2 = np.asmatrix(np.zeros((c,h)))
-    b2= np.asmatrix(np.zeros((c,1)))
+    W1 = np.asmatrix(np.zeros((h, p)))
+    b1 = np.asmatrix(np.zeros((h, 1)))
+    W2 = np.asmatrix(np.zeros((c, h)))
+    b2 = np.asmatrix(np.zeros((c, 1)))
 
     for _ in xrange(n_epoch):
         # go through each training instance
-        for x,y in zip(X,Y):
-            x = x.T 
+        for x, y in zip(X, Y):
+            x = x.T
             #########################################
             ## INSERT YOUR CODE HERE
 
             # Forward pass
-            
+            z1, a1, z2, a2 = forward(x, W1, b1, W2, b2)
             # compute local gradients 
-
-
+            dL_da2, da2_dz2, dz2_dW2, dz2_db2, dz2_da1, da1_dz1, dz1_dW1, dz1_db1 = backward(x, y, a1, a2, W2)
             # Back Propagation
-
-
+            dL_dW2, dL_db2, dL_dW1, dL_db1 = compute_gradients(dL_da2, da2_dz2, dz2_dW2, dz2_db2, dz2_da1, da1_dz1,
+                                                               dz1_dW1, dz1_db1)
             # update the paramters using gradient descent
-
-
-
+            W1 = W1 - alpha * dL_dW1
+            b1 = b1 - alpha * dL_db1
+            W2 = W2 - alpha * dL_dW2
+            b2 = b2 - alpha * dL_db2
             #########################################
     return W1, b1, W2, b2
 
-#--------------------------
-def predict(Xtest, W1,b1,W2,b2):
+
+# --------------------------
+def predict(Xtest, W1, b1, W2, b2):
     '''
        Predict the labels of the instances in a test dataset using fully connected network.
        (2 points)
@@ -534,27 +518,24 @@ def predict(Xtest, W1,b1,W2,b2):
     '''
     n = Xtest.shape[0]
     c = W2.shape[0]
-    Y = np.zeros(n) # initialize as all zeros
-    P = np.asmatrix(np.zeros((n,c)))  
+    Y = np.zeros(n)  # initialize as all zeros
+    P = np.asmatrix(np.zeros((n, c)))
     for i, x in enumerate(Xtest):
-        x = x.T # convert to column vector
+        x = x.T  # convert to column vector
         #########################################
         ## INSERT YOUR CODE HERE
-
-
-
-
+        P[i] = compute_a2(compute_z2(compute_a1(compute_z1(x, W1, b1)), W2, b2)).T
+        Y[i] = np.argmax(P[i])
         #########################################
     return Y, P
 
 
-
-#-----------------------------------------------------------------
+# -----------------------------------------------------------------
 # gradient checking 
-#-----------------------------------------------------------------
+# -----------------------------------------------------------------
 
-#--------------------------
-def check_da1_dz1(z1,delta= 1e-7):
+# --------------------------
+def check_da1_dz1(z1, delta=1e-7):
     '''
         Compute local gradient of the sigmoid activations a using gradient check.
         Input:
@@ -565,15 +546,16 @@ def check_da1_dz1(z1,delta= 1e-7):
                    The i-th element of da1_dz1 represents the partial gradient ( d_a1[i]  / d_z1[i] )
     '''
     p = z1.shape[0]
-    da1_dz1 = np.asmatrix(np.zeros((p,1)) )
+    da1_dz1 = np.asmatrix(np.zeros((p, 1)))
     for i in xrange(p):
-        d = np.asmatrix(np.zeros((p,1)))
+        d = np.asmatrix(np.zeros((p, 1)))
         d[i] = delta
-        da1_dz1[i] = (compute_a1(z1+d)[i] - compute_a1(z1)[i]) / delta
-    return da1_dz1 
+        da1_dz1[i] = (compute_a1(z1 + d)[i] - compute_a1(z1)[i]) / delta
+    return da1_dz1
 
-#--------------------------
-def check_dL_dW2(x,y, W1,b1,W2,b2, delta= 1e-7):
+
+# --------------------------
+def check_dL_dW2(x, y, W1, b1, W2, b2, delta=1e-7):
     '''
         Compute gradient of the weights W1 a using gradient check.
         Input:
@@ -581,20 +563,21 @@ def check_dL_dW2(x,y, W1,b1,W2,b2, delta= 1e-7):
         Output:
             dL_dW1: the approximated gradient of the loss L w.r.t. the weights W1
     '''
-    c,h = W2.shape
-    dL_dW2 = np.asmatrix(np.zeros((c,h))) 
+    c, h = W2.shape
+    dL_dW2 = np.asmatrix(np.zeros((c, h)))
     for i in xrange(c):
         for j in xrange(h):
-            d = np.asmatrix(np.zeros((c,h)) )
-            d[i,j] = delta
-            z1, a1, z2, a2 = forward(x, W1, b1, W2+d, b2)
-            L = sr.compute_L(a2,y)
+            d = np.asmatrix(np.zeros((c, h)))
+            d[i, j] = delta
+            z1, a1, z2, a2 = forward(x, W1, b1, W2 + d, b2)
+            L = sr.compute_L(a2, y)
             z1, a1, z2, a2 = forward(x, W1, b1, W2, b2)
-            dL_dW2[i,j] = (L - sr.compute_L(a2,y)) / delta
-    return dL_dW2 
+            dL_dW2[i, j] = (L - sr.compute_L(a2, y)) / delta
+    return dL_dW2
 
-#--------------------------
-def check_dL_dW1(x,y, W1,b1,W2,b2, delta= 1e-7):
+
+# --------------------------
+def check_dL_dW1(x, y, W1, b1, W2, b2, delta=1e-7):
     '''
         Compute gradient of the weights W1 a using gradient check.
         Input:
@@ -602,17 +585,14 @@ def check_dL_dW1(x,y, W1,b1,W2,b2, delta= 1e-7):
         Output:
             dL_dW1: the approximated gradient of the loss L w.r.t. the weights W1
     '''
-    h,p = W1.shape
-    dL_dW1 = np.asmatrix(np.zeros((h,p)) )
+    h, p = W1.shape
+    dL_dW1 = np.asmatrix(np.zeros((h, p)))
     for i in xrange(h):
         for j in xrange(p):
-            d = np.asmatrix(np.zeros((h,p)) )
-            d[i,j] = delta
-            z1, a1, z2, a2 = forward(x, W1+d, b1, W2, b2)
-            L = sr.compute_L(a2,y)
+            d = np.asmatrix(np.zeros((h, p)))
+            d[i, j] = delta
+            z1, a1, z2, a2 = forward(x, W1 + d, b1, W2, b2)
+            L = sr.compute_L(a2, y)
             z1, a1, z2, a2 = forward(x, W1, b1, W2, b2)
-            dL_dW1[i,j] = (L - sr.compute_L(a2,y)) / delta
-    return dL_dW1 
-
-
-
+            dL_dW1[i, j] = (L - sr.compute_L(a2, y)) / delta
+    return dL_dW1
