@@ -102,7 +102,7 @@ def compute_L(a, y):
     try:
         L = float(-np.log(1 - a) if y == 0 else -np.log(a))
     except FloatingPointError:
-        L = float(1e6)
+        L = float(1e10)
     #########################################
     return L
 
@@ -152,12 +152,12 @@ def compute_dL_da(a, y):
         try:
             dL_da = float(1. / (1 - a))
         except ZeroDivisionError:
-            dL_da = float(1e6)
+            dL_da = float(1e10)
     else:
         try:
             dL_da = float(-1. / a)
         except ZeroDivisionError:
-            dL_da = float(-1e6)
+            dL_da = float(-1e10)
     #########################################
     return dL_da
 

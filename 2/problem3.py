@@ -106,7 +106,7 @@ def compute_L(a, y):
     try:
         L = float(-np.log(a[y]))
     except FloatingPointError:
-        L = float('Inf')
+        L = float(1e10)
 
     #########################################
     return L
@@ -156,14 +156,10 @@ def compute_dL_da(a, y):
     ## INSERT YOUR CODE HERE     
     c = a.shape[0]
     dL_da = np.zeros(shape=(c, 1))
-    for i in xrange(c):
-        if i == y:
-            try:
-                dL_da[i] = -1. / float(a[i])
-            except ZeroDivisionError:
-                dL_da[i] = float(-1e6)
-        else:
-            dL_da[i] = 0
+    try:
+        dL_da[y] = -1. / float(a[y])
+    except ZeroDivisionError:
+        dL_da[y] = float(-1e10)
     dL_da = np.asmatrix(dL_da)
 
     #########################################
