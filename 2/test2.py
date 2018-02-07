@@ -159,6 +159,7 @@ def test_check_dL_da():
         da = compute_dL_da(a,y)
         # numerical gradients
         da_true = check_dL_da(a,y)
+        print str(da) + " || " + str(da_true)
         assert np.allclose(da, da_true, atol= 1e-3)
 
 #-------------------------------------------------------------------------
@@ -193,6 +194,7 @@ def test_check_da_dz():
         da_dz = compute_da_dz(a)
         # numerical gradients
         da_dz_true = check_da_dz(z)
+        print str(da_dz) + " || " + str(da_dz_true)
         assert np.allclose(da_dz, da_dz_true, atol=1e-4) 
 
 #-------------------------------------------------------------------------
