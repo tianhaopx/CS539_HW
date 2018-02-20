@@ -102,7 +102,7 @@ def test_conditional_entropy():
     x = np.array([1.,2.])
     d = np.array([1.,0.])
     ce = DS.conditional_entropy(y,x,d)
-    assert np.allclose(ce, 0., atol = 1e-3) 
+    assert np.allclose(ce, 0., atol = 1e-3)
 
     y = np.array([0.,1.,0.,1.])
     x = np.array([1.,4.,1.,4.])

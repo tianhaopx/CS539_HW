@@ -134,14 +134,24 @@ class DT(Tree):
         #########################################
         ## INSERT YOUR CODE HERE
         p, n = X.shape
-        res_ig = []
-        res_th = []
-        for j in xrange(p):
-            th, g = DT.best_threshold(X[j], Y)
-            res_th.append(th)
-            res_ig.append(g)
-        i = np.argmax(res_ig)
-        th = res_th[i]
+        i = 0
+        g_max = float("-inf")
+        th = 0
+        for j in range(p):
+            x = X[j]
+            local_th, g = DT.best_threshold(x, Y)
+            if g > g_max:
+                i = j
+                th = local_th
+                g_max = g
+        # res_ig = []
+        # res_th = []
+        # for j in xrange(p):
+        #     th, g = DT.best_threshold(X[j], Y)
+        #     res_th.append(th)
+        #     res_ig.append(g)
+        # i = np.argmax(res_ig)
+        # th = res_th[i]
         #########################################
         return i, th
 
