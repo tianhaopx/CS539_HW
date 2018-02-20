@@ -87,8 +87,8 @@ def test_best_threshold():
     y = np.array([0.,0.,1.,0., 1., 1.,1.])
     x = np.array([1.,2.,3.,4., 5., 6.,7.])
     th,g = DT.best_threshold(x,y)
-    assert th == 4.5 
-    np.allclose(th,0.52164063634,atol = 1e-3)
+    assert th == 4.5
+    assert np.allclose(g,0.52164063634,atol = 1e-3)
 
     y = np.array([0.,0.,1.])
     x = np.array([1.,1.,1.]) # if all values are the same

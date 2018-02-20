@@ -228,14 +228,14 @@ def test_best_threshold():
     d = np.array([3,1,1,1])/6.
     th,g = DS.best_threshold(x,y,d)
     assert th == 1.5 
-    np.allclose(g,0.1908,atol = 1e-3)
+    assert np.allclose(g,0.1908,atol = 1e-3)
 
     y = np.array([0.,0.,1.,0., 1., 1.,1.])
     x = np.array([1.,2.,3.,4., 5., 6.,7.])
     d = np.ones_like(y)/len(y)
     th,g = DS.best_threshold(x,y,d)
     assert th == 4.5 
-    np.allclose(th,0.52164063634,atol = 1e-3)
+    assert np.allclose(g,0.52164063634,atol = 1e-3)
 
     y = np.array([0.,0.,1.])
     x = np.array([1.,1.,1.]) # if all values are the same
