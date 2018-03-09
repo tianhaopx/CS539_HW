@@ -3,7 +3,7 @@ from torch.nn import Module, CrossEntropyLoss
 from torch.autograd import Variable
 from torch.optim import SGD
 
-#-------------------------------------------------------------------------
+# -------------------------------------------------------------------------
 '''
     Problem 1: Softmax Regression using Pytorch 
     In this problem, you will implement the softmax regression method using PyTorch. 
@@ -15,9 +15,11 @@ from torch.optim import SGD
     Note: please don't use torch.nn.Linear in the problem. Use Pytorch tensors/Variables to implement your own version of softmax regression.
 '''
 
-#-------------------------------------------------------
+
+# -------------------------------------------------------
 class SoftmaxRegression(Module):
     '''SoftmaxRegression is the softmax regression model with a single linear layer'''
+
     # ----------------------------------------------
     def __init__(self, p, c):
         ''' Initialize the softmax regression model. Create parameters W and b. Create a loss function object.  
@@ -34,7 +36,9 @@ class SoftmaxRegression(Module):
         super(SoftmaxRegression, self).__init__()
         #########################################
         ## INSERT YOUR CODE HERE
-
+        self.W = Variable(th.zeros(p, c), requires_grad=True)
+        self.b = Variable(th.zeros(c), requires_grad=True)
+        self.loss_fn = CrossEntropyLoss()
 
         #########################################
 
@@ -53,13 +57,12 @@ class SoftmaxRegression(Module):
         '''
         #########################################
         ## INSERT YOUR CODE HERE
-
-
+        z = th.mm(x, self.W) + self.b
         #########################################
         return z
 
-    #-----------------------------------------------------------------
-    def compute_L(self, z,y):
+    # -----------------------------------------------------------------
+    def compute_L(self, z, y):
         '''
             Compute multi-class cross entropy loss, which is the loss function of softmax regression. 
             Input:
@@ -71,14 +74,12 @@ class SoftmaxRegression(Module):
         '''
         #########################################
         ## INSERT YOUR CODE HERE
-
-
+        L = self.loss_fn(z, y)
         #########################################
-        return L 
+        return L
 
+        # -----------------------------------------------------------------
 
-
-    #-----------------------------------------------------------------
     def backward(self, L):
         '''
            Back Propagation: given compute the local gradients of the logits z, activations a, weights W and biases b on the instance. 
@@ -93,14 +94,11 @@ class SoftmaxRegression(Module):
         '''
         #########################################
         ## INSERT YOUR CODE HERE
-
-
+        L.backward()
         #########################################
 
-
-
     # ----------------------------------------------
-    def train(self, loader, n_epoch=10,alpha=0.01):
+    def train(self, loader, n_epoch=10, alpha=0.01):
         """train the model 
               Input:
                 loader: dataset loader, which loads one batch of dataset at a time.
@@ -110,11 +108,11 @@ class SoftmaxRegression(Module):
         """
 
         # create a SGD optimizer
-        optimizer = SGD([self.W,self.b], lr=alpha)
+        optimizer = SGD([self.W, self.b], lr=alpha)
         # go through the dataset n_epoch times
         for _ in xrange(n_epoch):
             # use loader to load one batch of training data
-            for x,y in loader:
+            for x, y in loader:
                 # convert data tensors into Variables
                 x = Variable(x)
                 y = Variable(y)
@@ -122,18 +120,21 @@ class SoftmaxRegression(Module):
                 ## INSERT YOUR CODE HERE
 
                 # forward pass
-
+                z = self.forward(x)
                 # compute loss 
-
+                L = self.compute_L(z, y)
                 # backward pass: compute gradients
+                self.backward(L)
 
                 # update model parameters
+                optimizer.step()
 
                 # reset the gradients of W and b to zero
+                optimizer.zero_grad()
 
                 #########################################
 
-    #--------------------------
+    # --------------------------
     def test(self, loader):
         '''
            Predict the labels of one batch of testing instances using softmax regression.
@@ -145,20 +146,22 @@ class SoftmaxRegression(Module):
         correct = 0.
         total = 0.
         # load dataset
-        for x,y in loader:
-            x = Variable(x) # one batch of testing instances, wrapped in Variable
+        for x, y in loader:
+            x = Variable(x)  # one batch of testing instances, wrapped in Variable
             #########################################
             ## INSERT YOUR CODE HERE
 
             # predict labels of the batch of testing data
+            z = self.forward(x)
 
-
+            # y = Variable(y)
+            y_predicted = th.LongTensor(y.size(0))
+            n = x.size(0)
+            for i in xrange(n):
+                a = (th.exp(z[i] - th.max(z[i]))) / (th.sum(th.exp(z[i] - th.max(z[i]))))
+                y_predicted[i] = th.max(a, 0)[1].data[0]
             #########################################
             total += y.size(0)
             correct += (y_predicted == y).sum()
         accuracy = correct / total
         return accuracy
-
-
-
-
