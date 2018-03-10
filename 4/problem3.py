@@ -45,10 +45,10 @@ class RNN(sr):
                 h: the number of memory (hidden) neurons, an integer scalar
                 c: the number of output classes, an integer scalar
             Outputs:
-                self.U: the weight matrix connecting the input features to the hidden units, a torch Variable of shape h by p, initialized as all-zeros. 
+                self.U: the weight matrix connecting the input features to the hidden units, a torch Variable of shape p by h, initialized as all-zeros. 
                 self.V: the weight matrix connecting the hidden units to hidden units, a torch vector Variable of shape h by h, initialized as all-zeros.
                 self.b_h: the bias vector of the hidden units, a torch vector Variable of length h, initialized as all-ones, to avoid vanishing gradient.
-                self.W: the weight matrix parameter in fully connected layer from hidden units to the output prediction, a torch Variable of shape (p, c), initialized as all-zeros. 
+                self.W: the weight matrix parameter in fully connected layer from hidden units to the output prediction, a torch Variable of shape (h, c), initialized as all-zeros. 
                         Hint: RNN is a subclass of SoftmaxRegression, which already has a W parameter and b. 
                 self.b: the bias vector parameter of the outputs, a torch Variable of shape (c), initialized as all-zeros
                 self.loss_fn: the loss function object for softmax regression. 

@@ -4,7 +4,7 @@ import torch.nn as nn
 from torch.autograd import Variable
 from torch.optim import SGD
 
-#-------------------------------------------------------------------------
+# -------------------------------------------------------------------------
 '''
     Problem 2: Convolutional Neural Network 
     In this problem, you will implement a convolutional neural network with a convolution layer and a max pooling layer.
@@ -13,8 +13,9 @@ from torch.optim import SGD
     Note: please do NOT use th.nn.functional.conv2d or th.nn.Conv2D, implement your own version of 2d convolution using only basic tensor operations.
 '''
 
-#--------------------------
-def conv2d(x,W,b):
+
+# --------------------------
+def conv2d(x, W, b):
     '''
         Compute the 2D convolution with one filter on one image, (assuming stride=1).
         Input:
@@ -28,16 +29,22 @@ def conv2d(x,W,b):
     '''
     #########################################
     ## INSERT YOUR CODE HERE
-
-
-
+    l, h, w = x.size()
+    s = W.size()[1]
+    z = Variable(th.zeros(h - s + 1, w - s + 1))
+    for i in xrange(l):
+        # c = x[i]
+        for j in xrange(h - s + 1):
+            for k in xrange(w - s + 1):
+                z[j, k] = z[j, k] + th.dot(x[i, j:j + s, k:k + s], W[i])
+    z = z + b
 
     #########################################
-    return z 
+    return z
 
 
-#--------------------------
-def Conv2D(x,W,b):
+# --------------------------
+def Conv2D(x, W, b):
     '''
         Compute the 2D convolution with multiple filters on a batch of images, (assuming stride=1).
         Input:
@@ -51,16 +58,19 @@ def Conv2D(x,W,b):
     '''
     #########################################
     ## INSERT YOUR CODE HERE
-
-
-
-
+    n, l, h, w = x.size()
+    n_filters = W.size()[0]
+    s = W.size()[2]
+    z = Variable(th.zeros(n, n_filters, h - s + 1, w - s + 1))
+    for i in xrange(n):
+        for j in xrange(n_filters):
+            z[i, j] = conv2d(x[i], W[j], b[j])
 
     #########################################
-    return z 
+    return z
 
 
-#--------------------------
+# --------------------------
 def ReLU(z):
     '''
         Compute ReLU activation. 
@@ -73,14 +83,22 @@ def ReLU(z):
     '''
     #########################################
     ## INSERT YOUR CODE HERE
-
-
+    n, n_filters, h, w = z.size()
+    a = Variable(th.zeros(n, n_filters, h, w))
+    for i in xrange(n):
+        for j in xrange(n_filters):
+            for k in xrange(h):
+                for l in xrange(w):
+                    if float(z[i, j, k, l]) > 0:
+                        a[i, j, k, l] = z[i, j, k, l]
+                    else:
+                        a[i, j, k, l] = 0
 
     #########################################
-    return a 
+    return a
 
 
-#--------------------------
+# --------------------------
 def avgpooling(a):
     '''
         Compute the 2D average pooling (assuming shape of the pooling window is 2 by 2).
@@ -93,16 +111,19 @@ def avgpooling(a):
     '''
     #########################################
     ## INSERT YOUR CODE HERE
-
-
-
-
-
+    n, n_filters, h, w = a.size()
+    p = Variable(th.zeros(n, n_filters, h // 2, w // 2))
+    for i in xrange(n):
+        for j in xrange(n_filters):
+            for k in xrange(h // 2):
+                for l in xrange(w // 2):
+                    p[i, j, k, l] = th.mean(a[i, j, k * 2:k * 2 + 2, l * 2:l * 2 + 2])
 
     #########################################
-    return p 
+    return p
 
-#--------------------------
+
+# --------------------------
 def maxpooling(a):
     '''
         Compute the 2D max pooling (assuming shape of the pooling window is 2 by 2).
@@ -116,16 +137,25 @@ def maxpooling(a):
     '''
     #########################################
     ## INSERT YOUR CODE HERE
+    n, n_filters, h, w = a.size()
+    p = Variable(th.zeros(n, n_filters, h // 2, w // 2))
+    for i in xrange(n):
+        for j in xrange(n_filters):
+            for k in xrange(h // 2):
+                for l in xrange(w // 2):
+                    tmp = a[i, j, k * 2:k * 2 + 2, l * 2:l * 2 + 2]
+                    max = tmp[0, 0]
+                    for x in xrange(2):
+                        for y in xrange(2):
+                            if tmp[x, y].data[0] > max.data[0]:
+                                max = tmp[x, y]
+                    # p[i, j, k, l] = th.max(a[i, j, k * 2:k * 2 + 2, l * 2:l * 2 + 2])
+                    p[i, j, k, l] = max
+                    #########################################
+    return p
 
 
-
-
-
-    #########################################
-    return p 
-
-
-#--------------------------
+# --------------------------
 def num_flat_features(h=28, w=28, s=3, n_filters=10):
     ''' Compute the number of flat features after convolution and pooling. Here we assume the stride of convolution is 1, the size of pooling kernel is 2 by 2, no padding. 
         Inputs:
@@ -138,20 +168,21 @@ def num_flat_features(h=28, w=28, s=3, n_filters=10):
     '''
     #########################################
     ## INSERT YOUR CODE HERE
-
-
-
+    h_ = h - s + 1
+    w_ = w - s + 1
+    p = (h_ // 2) * (w_ // 2) * n_filters
 
     #########################################
     return p
- 
 
-#-------------------------------------------------------
+
+# -------------------------------------------------------
 class CNN(sr):
     '''CNN is a convolutional neural network with a convolution layer (with ReLU activation), a max pooling layer and a fully connected layer.
        In the convolutional layer, we will use ReLU as the activation function. 
        After the convolutional layer, we apply a 2 by 2 max pooling layer, before feeding into the fully connected layer.
     '''
+
     # ----------------------------------------------
     def __init__(self, l=1, h=28, w=28, s=5, n_filters=5, c=10):
         ''' Initialize the model. Create parameters of convolutional layer and fully connected layer. 
@@ -175,15 +206,16 @@ class CNN(sr):
         ## INSERT YOUR CODE HERE
 
         # compute the number of flat features
+        p = num_flat_features(h, w, s, n_filters)
 
-        # initialize fully connected layer 
+        # initialize fully connected layer
+        self.conv_W = Variable(th.zeros(n_filters, l, s, s), requires_grad=True)
+        self.conv_b = Variable(th.ones(n_filters), requires_grad=True)
+        super(CNN, self).__init__(p, c)
 
         # the kernel matrix of convolutional layer 
 
-
-
         #########################################
-
 
     # ----------------------------------------------
     def forward(self, x):
@@ -196,22 +228,27 @@ class CNN(sr):
         '''
         #########################################
         ## INSERT YOUR CODE HERE
-    
-        # convolutional layer
 
-        # ReLU activation 
+        # convolutional layer
+        z = Conv2D(x, self.conv_W, self.conv_b)
+
+        # ReLU activation
+        a = ReLU(z)
 
         # maxpooling layer
+        pooling = maxpooling(a)
 
-        # flatten 
+        # flatten
+        flatten = pooling.view(pooling.size()[0], -1)
 
         # fully connected layer
+        z = super(CNN, self).forward(flatten)
 
         #########################################
         return z
 
     # ----------------------------------------------
-    def train(self, loader, n_steps=10,alpha=0.01):
+    def train(self, loader, n_steps=10, alpha=0.01):
         """train the model 
               Input:
                 loader: dataset loader, which loads one batch of dataset at a time.
@@ -219,11 +256,11 @@ class CNN(sr):
                 alpha: the learning rate for SGD(stochastic gradient descent), a float scalar
         """
         # create a SGD optimizer
-        optimizer = SGD([self.conv_W,self.conv_b,self.W,self.b], lr=alpha)
+        optimizer = SGD([self.conv_W, self.conv_b, self.W, self.b], lr=alpha)
         count = 0
         while True:
             # use loader to load one batch of training data
-            for x,y in loader:
+            for x, y in loader:
                 # convert data tensors into Variables
                 x = Variable(x)
                 y = Variable(y)
@@ -231,17 +268,21 @@ class CNN(sr):
                 ## INSERT YOUR CODE HERE
 
                 # forward pass
+                z = self.forward(x)
 
-                # compute loss 
+                # compute loss
+                L = super(CNN, self).compute_L(z, y)
 
                 # backward pass: compute gradients
+                super(CNN, self).backward(L)
 
                 # update model parameters
+                optimizer.step()
 
-                # reset the gradients 
+                # reset the gradients
+                optimizer.zero_grad()
 
                 #########################################
-                count+=1
-                if count >=n_steps:
-                    return 
-
+                count += 1
+                if count >= n_steps:
+                    return
