@@ -3,7 +3,8 @@ import torch as th
 import torch.nn as nn
 from torch.autograd import Variable
 from torch.optim import SGD
-#-------------------------------------------------------------------------
+
+# -------------------------------------------------------------------------
 '''
     Problem 3: Recurrent Neural Network 
     In this problem, you will implement the recurrent neural network for sequence classification problems.
@@ -13,7 +14,7 @@ from torch.optim import SGD
 '''
 
 
-#--------------------------
+# --------------------------
 def tanh(z):
     """ Compute the hyperbolic tangent of the elements
         math: f(z) = (exp(z) - exp(-z)) / (exp(z) + exp(-z))
@@ -25,18 +26,30 @@ def tanh(z):
     """
     #########################################
     ## INSERT YOUR CODE HERE
-
-
+    # a = th.div(th.exp(z)-th.exp(-z),th.exp(z)+th.exp(-z))
+    raw_size = z.size()
+    z = z.view(-1)
+    a = Variable(th.zeros(z.size()[0]))
+    for i in xrange(z.size()[0]):
+        # for j in xrange(p):
+        if z[i].data[0] > 600:
+            a[i] = 1
+        elif z[i].data[0] < -600:
+            a[i] = -1
+        else:
+            a[i] = th.div(th.exp(z[i]) - th.exp(-z[i]), th.exp(z[i]) + th.exp(-z[i]))
+    a = a.view(*raw_size)
 
     #########################################
     return a
 
 
-#-------------------------------------------------------
+# -------------------------------------------------------
 class RNN(sr):
     '''RNN is a recurrent neural network with hyperbolic tangent function as the activation function.
        After the recurrent layer, we apply a fully connected layer from hidden neurons to produce the output.
     '''
+
     # ----------------------------------------------
     def __init__(self, p, h=10, c=10):
         ''' Initialize the model. Create parameters of recurrent neural network. 
@@ -56,11 +69,12 @@ class RNN(sr):
         '''
         #########################################
         ## INSERT YOUR CODE HERE
-
-
+        self.U = Variable(th.zeros(p, h), requires_grad=True)
+        self.V = Variable(th.zeros(h, h), requires_grad=True)
+        self.b_h = Variable(th.ones(h), requires_grad=True)
+        super(RNN, self).__init__(h, c)
 
         #########################################
-
 
     # ----------------------------------------------
     def forward(self, x, H):
@@ -75,14 +89,13 @@ class RNN(sr):
         '''
         #########################################
         ## INSERT YOUR CODE HERE
-
-
+        H_new = tanh(th.mm(x, self.U) + th.mm(H, self.V) + self.b_h)
+        z = th.mm(H_new, self.W) + self.b
         #########################################
         return z, H_new
 
-
     # ----------------------------------------------
-    def train(self, loader, n_steps=10,alpha=0.01):
+    def train(self, loader, n_steps=10, alpha=0.01):
         """train the model 
               Input:
                 loader: dataset loader, which loads one batch of dataset at a time.
@@ -93,35 +106,38 @@ class RNN(sr):
                 Note: the loss of a sequence is computed as the sum of the losses in all time steps of the sequence.
         """
         # create a SGD optimizer
-        optimizer = SGD([self.U,self.V,self.b_h,self.W,self.b], lr=alpha)
+        optimizer = SGD([self.U, self.V, self.b_h, self.W, self.b], lr=alpha)
         count = 0
         while True:
             # use loader to load one batch of training data
-            for x,y in loader:
+            for x, y in loader:
                 # convert data tensors into Variables
                 x = Variable(x)
                 y = Variable(y)
-                n,t,p = x.size()
-                h,_ = self.V.size()
+                n, t, p = x.size()
+                h, _ = self.V.size()
                 # initialize hidden state as all zeros
-                H = Variable(th.zeros(n,h))
+                H = Variable(th.zeros(n, h))
                 #########################################
                 ## INSERT YOUR CODE HERE
-
+                L = 0
                 # go through each time step
-
+                for i in xrange(t):
                     # forward pass
-
-                    # compute loss 
+                    z, H = self.forward(x[:, i, :], H)
+                    # compute loss
+                    L += super(RNN, self).compute_L(z, y[:, i])
 
                 # backward pass: compute gradients
+                super(RNN, self).backward(L)
 
                 # update model parameters
+                optimizer.step()
 
                 # reset the gradients to zero
+                optimizer.zero_grad()
 
                 #########################################
-                count+=1
-                if count >=n_steps:
+                count += 1
+                if count >= n_steps:
                     return
-
