@@ -32,9 +32,9 @@ def tanh(z):
     a = Variable(th.zeros(z.size()[0]))
     for i in xrange(z.size()[0]):
         # for j in xrange(p):
-        if z[i].data[0] > 600:
+        if z[i].data[0] >= 100:
             a[i] = 1
-        elif z[i].data[0] < -600:
+        elif z[i].data[0] <= -100:
             a[i] = -1
         else:
             a[i] = th.div(th.exp(z[i]) - th.exp(-z[i]), th.exp(z[i]) + th.exp(-z[i]))

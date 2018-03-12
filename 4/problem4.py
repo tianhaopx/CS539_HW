@@ -4,7 +4,8 @@ import torch as th
 import torch.nn as nn
 from torch.autograd import Variable
 from torch.optim import SGD
-#-------------------------------------------------------------------------
+
+# -------------------------------------------------------------------------
 '''
     Problem 4: LSTM 
     In this problem, you will implement the LSTM for sequence classification problems.
@@ -13,10 +14,11 @@ from torch.optim import SGD
     Note: please do NOT use torch.nn.LSTM, implement your own version of LSTM using only basic tensor operations.
 '''
 
-#-------------------------------------------------------
+
+# -------------------------------------------------------
 class LSTM(sr):
     '''LSTM is a recurrent neural network with Long-Short Term Memory.  '''
- 
+
     # ----------------------------------------------
     def __init__(self, p, h=10, c=10):
         ''' Initialize the model. Create parameters of recurrent neural network. 
@@ -40,8 +42,15 @@ class LSTM(sr):
         '''
         #########################################
         ## INSERT YOUR CODE HERE
-
-
+        self.W_i = Variable(th.zeros(p + h, h), requires_grad=True)
+        self.b_i = Variable(th.zeros(h), requires_grad=True)
+        self.W_o = Variable(th.zeros(p + h, h), requires_grad=True)
+        self.b_o = Variable(th.zeros(h), requires_grad=True)
+        self.W_c = Variable(th.zeros(p + h, h), requires_grad=True)
+        self.b_c = Variable(th.zeros(h), requires_grad=True)
+        self.W_f = Variable(th.zeros(p + h, h), requires_grad=True)
+        self.b_f = Variable(th.zeros(h), requires_grad=True)
+        super(LSTM, self).__init__(h, c)
 
         #########################################
 
@@ -62,13 +71,12 @@ class LSTM(sr):
         '''
         #########################################
         ## INSERT YOUR CODE HERE
-
-
-
-
+        f = th.sigmoid(th.mm(th.cat((x, H), 1), self.W_f) + self.b_f)
+        i = th.sigmoid(th.mm(th.cat((x, H), 1), self.W_i) + self.b_i)
+        o = th.sigmoid(th.mm(th.cat((x, H), 1), self.W_o) + self.b_o)
+        C_c = tanh(th.mm(th.cat((x, H), 1), self.W_c) + self.b_c)
         #########################################
         return f, i, o, C_c
-
 
     # ----------------------------------------------
     @staticmethod
@@ -85,14 +93,13 @@ class LSTM(sr):
         '''
         #########################################
         ## INSERT YOUR CODE HERE
-
-
+        C_new = f * C + i * C_c
 
         #########################################
-        return C_new 
+        return C_new
 
+        # ----------------------------------------------
 
-    # ----------------------------------------------
     @staticmethod
     def output_hidden_state(C, o):
         '''
@@ -105,15 +112,13 @@ class LSTM(sr):
         '''
         #########################################
         ## INSERT YOUR CODE HERE
-
+        H = o * tanh(C)
 
         #########################################
         return H
 
-
-
     # ----------------------------------------------
-    def forward(self, x, H,C):
+    def forward(self, x, H, C):
         '''
            Given a batch of training instances (with one time step), compute the linear logits z in the outputs.
             Input:
@@ -127,14 +132,16 @@ class LSTM(sr):
         '''
         #########################################
         ## INSERT YOUR CODE HERE
-
-
+        f, i, o, C_c = self.gates(x, H)
+        C_new = self.update_cell(C, C_c, f, i)
+        H_new = self.output_hidden_state(C_new, o)
+        z = th.mm(H_new, self.W) + self.b
 
         #########################################
         return z, H_new, C_new
 
     # ----------------------------------------------
-    def train(self, loader, n_steps=10,alpha=0.01):
+    def train(self, loader, n_steps=10, alpha=0.01):
         """train the model 
               Input:
                 loader: dataset loader, which loads one batch of dataset at a time.
@@ -158,33 +165,36 @@ class LSTM(sr):
         count = 0
         while True:
             # use loader to load one batch of training data
-            for x,y in loader:
+            for x, y in loader:
                 # convert data tensors into Variables
                 x = Variable(x)
                 y = Variable(y)
-                n,t,p = x.size()
-                _,h = self.W_f.size()
+                n, t, p = x.size()
+                _, h = self.W_f.size()
                 # initialize hidden state as all zeros
-                H = Variable(th.zeros(n,h))
-                C = Variable(th.zeros(n,h))
+                H = Variable(th.zeros(n, h))
+                C = Variable(th.zeros(n, h))
                 #########################################
                 ## INSERT YOUR CODE HERE
 
-
+                L = 0
                 # go through each time step
-
+                for i in xrange(t):
                     # forward pass
+                    z, H, C = self.forward(x[:, i, :], H, C)
 
-                    # compute loss 
+                    # compute loss
+                    L += super(LSTM, self).compute_L(z, y[:, i])
 
                 # backward pass: compute gradients
+                super(LSTM, self).backward(L)
 
                 # update model parameters
+                optimizer.step()
 
                 # reset the gradients to zero
-
+                optimizer.zero_grad()
                 #########################################
-                count+=1
-                if count >=n_steps:
+                count += 1
+                if count >= n_steps:
                     return
-
