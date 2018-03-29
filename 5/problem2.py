@@ -130,7 +130,7 @@ class Agent(object):
         #########################################
 
     # -----------------------------------------------------------------
-    def play(self, g, n_steps=100000):
+    def play(self, g, n_steps=1000):
         '''
             Play the game for n_steps steps. In each step,
             (1) pull a lever and receive the reward and the state from the game
@@ -145,8 +145,8 @@ class Agent(object):
         ## INSERT YOUR CODE HERE
         for _ in xrange(n_steps):
             a = self.forward(s)
-            old_s = s
             r, s = g.step(a)
-            self.update(old_s, a, r)
+            self.update(g.s, a, r)
+            g.s = s
 
         #########################################

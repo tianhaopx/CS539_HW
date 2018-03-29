@@ -107,7 +107,7 @@ class PolicyNet(QNet):
         '''
         #########################################
         ## INSERT YOUR CODE HERE
-        cat = th.distributions.Categorical(a)
+        cat = Categorical(a)
         m = cat.sample()
         logp = cat.log_prob(m)
 
@@ -146,18 +146,18 @@ class PolicyNet(QNet):
             ## INSERT YOUR CODE HERE
 
             # compute the probability of taking each action
-            action = np.random.randint(0, self.n)
 
             a = self.forward(s)
 
             # sample an action based upon the probabilities
             m, logp = self.sample_action(a)
             # play one step in the game
-            s, r, done, _ = env.step(action)
+            s_new, r, done, _ = env.step(m)
             S.append(s)
             M.append(m)
             logP.append(logp)
             R.append(r)
+            s = s_new
             #########################################
         return S, M, logP, R
 
@@ -231,6 +231,8 @@ class PolicyNet(QNet):
             L = self.compute_L(logP, dR)
             L.backward()
             optimizer.step()
+            grad = self.W.grad
+            self.W.data.add_(-lr * grad.data)
             optimizer.zero_grad()
             #########################################
             total_rewards += sum(R)  # assuming the list of rewards of the episode is R

@@ -98,12 +98,13 @@ class QLearner(Agent):
                 ## INSERT YOUR CODE HERE
 
                 # agent selects an action
-                a = np.random.randint(0, 4)
+                a = self.forward(s)
                 s_new, r, done, _ = env.step(a)
                 # game return a reward and new state
 
                 # agent update the parameters
                 self.update(s, a, r, s_new, gamma, lr)
+                s = s_new
                 #########################################
                 total_rewards += r  # assuming the reward of the step is r
         return total_rewards

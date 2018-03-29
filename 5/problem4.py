@@ -101,7 +101,10 @@ class QNet(object):
         #########################################
         ## INSERT YOUR CODE HERE
         Q = self.compute_Q(s)
-        a = th.max(Q, 0)[1].data[0]
+        if np.random.uniform() >= self.e:
+            a = th.max(Q, 0)[1].data[0]
+        else:
+            a = np.random.randint(0, self.n)
 
         #########################################
         return a
@@ -123,9 +126,11 @@ class QNet(object):
         ## INSERT YOUR CODE HERE
 
         # compute target Q
+        self.W.requires_grad = False
         target_Q = r + gamma * th.max(self.compute_Q(s_new))
 
         # get current Q
+        self.W.requires_grad = True
         current_Q = self.compute_Q(s)[a]
 
         # compute loss
@@ -164,17 +169,20 @@ class QNet(object):
                 ## INSERT YOUR CODE HERE
 
                 # agent selects an action
-
+                a = self.forward(s)
                 # game return a reward and new state
-
+                s_new, r, done, _ = env.step(a)
                 # agent update the parameters
-
+                L = self.compute_L(s, a, r, s_new, gamma)
                 # compute gradients
-
+                L.backward()
+                optimizer.step()
+                grad = self.W.grad
                 # update model parameters
-
+                self.W.data.add_(-lr * grad.data)
+                s = s_new
                 # reset the gradients of W to zero
-
+                optimizer.zero_grad()
                 #########################################
                 total_rewards += r  # assuming the reward of the step is r
         return total_rewards
