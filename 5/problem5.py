@@ -2,12 +2,12 @@ import math
 import numpy as np
 import torch as th
 from torch.autograd import Variable
-from torch.optim import Adam 
+from torch.optim import Adam
 import gym
 from problem4 import Game, QNet
 from torch.distributions import Categorical
 
-#-------------------------------------------------------------------------
+# -------------------------------------------------------------------------
 '''
     Problem 5: Policy-gradient Method for Deep Reinforcement Learning 
     In this problem, you will implement an AI player for the frozen lake game, using a neural network.
@@ -25,7 +25,8 @@ from torch.distributions import Categorical
         3 : "UP"
 '''
 
-#-------------------------------------------------------
+
+# -------------------------------------------------------
 class PolicyNet(QNet):
     ''' 
         The agent is trying to maximize the sum of rewards (payoff) in the game using Policy-Gradient Method. 
@@ -33,6 +34,7 @@ class PolicyNet(QNet):
         We will use the weight matrix W as the policy network.
         The agent will use the output probabilities (after softmax) to randomly sample actions. 
     '''
+
     # ----------------------------------------------
     def __init__(self, n=4, d=16):
         ''' Initialize the agent. 
@@ -40,7 +42,7 @@ class PolicyNet(QNet):
                 n: the number of actions in the game, an integer scalar. 
                 d: the number of dimensions of the states of the game, an integer scalar. 
         '''
-        super(PolicyNet, self).__init__(n,d,0.)
+        super(PolicyNet, self).__init__(n, d, 0.)
 
     # ----------------------------------------------
     def compute_z(self, s):
@@ -53,12 +55,12 @@ class PolicyNet(QNet):
         '''
         #########################################
         ## INSERT YOUR CODE HERE
+        z = th.mv(self.W, s)
 
         #########################################
         return z
 
-
-    #-----------------------------------------------------------------
+    # -----------------------------------------------------------------
     @staticmethod
     def compute_a(z):
         '''
@@ -72,7 +74,7 @@ class PolicyNet(QNet):
         '''
         #########################################
         ## INSERT YOUR CODE HERE
-
+        a = th.nn.functional.softmax(z, dim=0)
         #########################################
         return a
 
@@ -87,13 +89,11 @@ class PolicyNet(QNet):
         '''
         #########################################
         ## INSERT YOUR CODE HERE
-
-
+        a = self.compute_a(self.compute_z(s))
         #########################################
         return a
 
-
-    #--------------------------
+    # --------------------------
     @staticmethod
     def sample_action(a):
         '''
@@ -107,15 +107,16 @@ class PolicyNet(QNet):
         '''
         #########################################
         ## INSERT YOUR CODE HERE
-
-
+        cat = th.distributions.Categorical(a)
+        m = cat.sample()
+        logp = cat.log_prob(m)
 
         #########################################
-        return m, logp 
+        return int(m), logp
 
+        # --------------------------
 
-    #--------------------------
-    def play_episode(self, env, render =False):
+    def play_episode(self, env, render=False):
         '''
             Play one episode of the game and collect data of actions and rewards, while fixing the model parameters.
             This process is also called roll-out or trial.
@@ -134,30 +135,35 @@ class PolicyNet(QNet):
                 R: the raw rewards in the game, a python list of collected rewards.
                     R[i] is the collected reward at the i-th step.
         '''
-        S,M,logP,R = [],[],[],[]
-        s = env.reset() # initial state of the game 
+        S, M, logP, R = [], [], [], []
+        s = env.reset()  # initial state of the game
         done = False
         # play the game until the episode is done
         while not done:
             if render:
-                env.render() # render the game
+                env.render()  # render the game
             #########################################
             ## INSERT YOUR CODE HERE
 
             # compute the probability of taking each action
+            action = np.random.randint(0, self.n)
+
+            a = self.forward(s)
 
             # sample an action based upon the probabilities
-
+            m, logp = self.sample_action(a)
             # play one step in the game
-
-
+            s, r, done, _ = env.step(action)
+            S.append(s)
+            M.append(m)
+            logP.append(logp)
+            R.append(r)
             #########################################
-        return S,M,logP,R
+        return S, M, logP, R
 
-
-    #--------------------------
+    # --------------------------
     @staticmethod
-    def discount_rewards(R,gamma=0.98):
+    def discount_rewards(R, gamma=0.98):
         '''
             Given a time sequence of raw rewards in a game episode, compute discounted rewards (non-sparse) 
             Input:
@@ -168,15 +174,17 @@ class PolicyNet(QNet):
         '''
         #########################################
         ## INSERT YOUR CODE HERE
-
-
-
+        h = len(R)
+        dR = R[:]
+        for i in xrange(h - 2, -1, -1):
+            dR[i] = dR[i + 1] * gamma + R[i]
         #########################################
-        return dR 
- 
-    #-----------------------------------------------------------------
+        return dR
+
+        # -----------------------------------------------------------------
+
     @staticmethod
-    def compute_L(logP,dR):
+    def compute_L(logP, dR):
         '''
             Compute policy loss of a game episode: the sum of (- log_probability * discounted_reward) at each step
             Input:
@@ -189,16 +197,15 @@ class PolicyNet(QNet):
         '''
         #########################################
         ## INSERT YOUR CODE HERE
-
-
-
-
+        L = -logP[0] * dR[0]
+        for i in xrange(1, len(logP)):
+            L -= logP[i] * dR[i]
         #########################################
-        return L 
+        return L
 
- 
-    #--------------------------
-    def play(self, env, n_episodes, render =False,gamma=.95, lr=.1):
+        # --------------------------
+
+    def play(self, env, n_episodes, render=False, gamma=.95, lr=.1):
         '''
             Given a game environment of gym package, play multiple episodes of the game.
             An episode is over when the returned value for "done"= True.
@@ -219,17 +226,12 @@ class PolicyNet(QNet):
         for _ in xrange(n_episodes):
             #########################################
             ## INSERT YOUR CODE HERE
-
-
-
-
-
-
-
-
-
-
+            S, M, logP, R = self.play_episode(env, render)
+            dR = self.discount_rewards(R, gamma)
+            L = self.compute_L(logP, dR)
+            L.backward()
+            optimizer.step()
+            optimizer.zero_grad()
             #########################################
-            total_rewards += sum(R) # assuming the list of rewards of the episode is R
+            total_rewards += sum(R)  # assuming the list of rewards of the episode is R
         return total_rewards
-

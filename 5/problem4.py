@@ -4,7 +4,8 @@ import torch as th
 from torch.autograd import Variable
 from torch.optim import SGD
 import gym
-#-------------------------------------------------------------------------
+
+# -------------------------------------------------------------------------
 '''
     Problem 4: Deep Q-Learning
     In this problem, you will implement an AI player for the frozen lake game, using a neural network.
@@ -20,30 +21,36 @@ import gym
         3 : "UP"
 '''
 
-#-------------------------------------------------------
+
+# -------------------------------------------------------
 class Game:
     '''Game is the frozen lake game with one-hot encoding of states. '''
+
     def __init__(self):
         self.env = gym.make("FrozenLake-v0")
+
     def reset(self):
-        s = self.env.reset()        
+        s = self.env.reset()
         s = Variable(th.Tensor(np.identity(16)[s]))
-        return s 
-    def step(self,action):
+        return s
+
+    def step(self, action):
         '''convert the state into one-hot encoding'''
-        s, r, done, info = self.env.step(action) 
+        s, r, done, info = self.env.step(action)
         s = Variable(th.Tensor(np.identity(16)[s]))
-        return s,r, done, info
+        return s, r, done, info
+
     def render(self):
         self.env.render()
 
 
-#-------------------------------------------------------
+# -------------------------------------------------------
 class QNet(object):
     '''The agent is trying to maximize the sum of rewards (payoff) in the game using Q-Learning neural network. 
        The agent will 
                 (1) with a small probability (epsilon or e), randomly choose an action with a uniform distribution on all actions (Exploration); 
                 (2) with a big probability (1-e) to choose the action with the largest expected reward (Exploitation). If there is a tie, pick the one with the smallest index.'''
+
     # ----------------------------------------------
     def __init__(self, n=4, d=16, e=0.1):
         ''' Initialize the agent. 
@@ -58,11 +65,11 @@ class QNet(object):
         '''
         #########################################
         ## INSERT YOUR CODE HERE
-
-
+        self.n = n
+        self.e = e
+        self.W = Variable(th.zeros(n, d), requires_grad=True)
 
         #########################################
-
 
     # ----------------------------------------------
     def compute_Q(self, s):
@@ -76,14 +83,10 @@ class QNet(object):
         '''
         #########################################
         ## INSERT YOUR CODE HERE
-
-
+        Q = th.matmul(self.W, s)
 
         #########################################
         return Q
-
-
-
 
     # ----------------------------------------------
     def forward(self, s):
@@ -97,15 +100,14 @@ class QNet(object):
         '''
         #########################################
         ## INSERT YOUR CODE HERE
-
-
-
+        Q = self.compute_Q(s)
+        a = th.max(Q, 0)[1].data[0]
 
         #########################################
         return a
 
-    #-----------------------------------------------------------------
-    def compute_L(self,s,a,r,s_new, gamma=.95):
+    # -----------------------------------------------------------------
+    def compute_L(self, s, a, r, s_new, gamma=.95):
         '''
             Compute squared error of the Q function. (target_Q_value - current_Q)^2
             Input:
@@ -121,17 +123,19 @@ class QNet(object):
         ## INSERT YOUR CODE HERE
 
         # compute target Q
+        target_Q = r + gamma * th.max(self.compute_Q(s_new))
 
         # get current Q
+        current_Q = self.compute_Q(s)[a]
 
         # compute loss
-
+        L = (target_Q - current_Q) ** 2
         #########################################
-        return L 
+        return L
 
- 
-    #--------------------------
-    def play(self, env, n_episodes, render =False,gamma=.95, lr=.1):
+        # --------------------------
+
+    def play(self, env, n_episodes, render=False, gamma=.95, lr=.1):
         '''
             Given a game environment of gym package, play multiple episodes of the game.
             An episode is over when the returned value for "done"= True.
@@ -150,12 +154,12 @@ class QNet(object):
         total_rewards = 0.
         # play multiple episodes
         for _ in xrange(n_episodes):
-            s = env.reset() # initialize the episode 
+            s = env.reset()  # initialize the episode
             done = False
             # play the game until the episode is done
             while not done:
                 if render:
-                    env.render() # render the game
+                    env.render()  # render the game
                 #########################################
                 ## INSERT YOUR CODE HERE
 
@@ -172,9 +176,5 @@ class QNet(object):
                 # reset the gradients of W to zero
 
                 #########################################
-                total_rewards += r # assuming the reward of the step is r
+                total_rewards += r  # assuming the reward of the step is r
         return total_rewards
-
-
-
-

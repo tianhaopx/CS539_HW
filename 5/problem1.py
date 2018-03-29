@@ -1,17 +1,19 @@
 import math
 import numpy as np
 
-#-------------------------------------------------------------------------
-'''
-    Problem 1: Multi-armed bandit problem 
-    In this problem, you will implement an AI player for Multi-armed bandit problem epsilon-greedy method.
-    The main goal of this problem is to get familiar with a simplified problem in reinforcement learning, and how to train the model parameters on the data from a game.
-    You could test the correctness of your code by typing `nosetests test1.py` in the terminal.
-'''
+# -------------------------------------------------------------------------
+'''Problem 1: Multi-armed bandit problem In this problem, you will implement an AI player for Multi-armed bandit 
+problem epsilon-greedy method. The main goal of this problem is to get familiar with a simplified problem in 
+reinforcement learning, and how to train the model parameters on the data from a game. You could test the correctness 
+of your code by typing `nosetests test1.py` in the terminal. '''
 
-#-------------------------------------------------------
+
+# -------------------------------------------------------
 class Bandit:
-    '''Bandit is the Multi-armed bandit machine. Instead of one  slot machine lever, you have a number of them, say three. Each lever/arm corresponds to a probability of winning. However these odds/probabilities are hidden from the players. '''
+    '''Bandit is the Multi-armed bandit machine. Instead of one  slot machine lever, you have a number of them,
+    say three. Each lever/arm corresponds to a probability of winning. However these odds/probabilities are hidden
+    from the players. '''
+
     # ----------------------------------------------
     def __init__(self, p):
         ''' Initialize the game. 
@@ -23,6 +25,7 @@ class Bandit:
         '''
         #########################################
         ## INSERT YOUR CODE HERE
+        self.p = p
 
         #########################################
 
@@ -39,18 +42,21 @@ class Bandit:
         '''
         #########################################
         ## INSERT YOUR CODE HERE
-
-
+        if np.random.random() >= self.p[a]:
+            r = 0.
+        else:
+            r = 1.
         #########################################
         return r
 
 
-#-------------------------------------------------------
+# -------------------------------------------------------
 class Agent:
-    '''The agent is trying to maximize the sum of rewards (payoff) in the game using epsilon-greedy method.
-       The agent will 
-                (1) with a small probability (epsilon or e), randomly pull a lever with uniform distribution on all levers (Exploration); 
-                (2) with a big probability (1-e) to pull the arm with the largest expected reward (Exploitation). If there is a tie, pick the one with the smallest index.'''
+    '''The agent is trying to maximize the sum of rewards (payoff) in the game using epsilon-greedy method. The agent
+    will (1) with a small probability (epsilon or e), randomly pull a lever with uniform distribution on all levers (
+    Exploration); (2) with a big probability (1-e) to pull the arm with the largest expected reward (Exploitation).
+    If there is a tie, pick the one with the smallest index. '''
+
     # ----------------------------------------------
     def __init__(self, n, e=0.1):
         ''' Initialize the agent. 
@@ -66,31 +72,35 @@ class Agent:
         '''
         #########################################
         ## INSERT YOUR CODE HERE
-
+        self.n = n
+        self.e = e
+        self.Q = np.zeros(n)
+        self.c = np.zeros(n)
 
         #########################################
 
-   # ----------------------------------------------
+    # ----------------------------------------------
     def forward(self):
         '''
-            The policy function of the agent.
-            The agent will 
-                (1) with a small probability (epsilon or e), randomly pull a lever with uniform distribution on all levers (Exploration); 
-                (2) with a big probability (1-e) to pull the arm with the largest expected reward (Exploitation). If there is a tie, pick the one with the smallest index.
-            Output:
-                a: the index of the lever to pull. a is an integer scalar between 0 and n-1. 
+        The policy function of the agent.
+        The agent will (1) with a small probability (epsilon or e), randomly pull a
+        lever with uniform distribution on all levers (Exploration);
+        (2) with a big probability (1-e) to pull the arm
+        with the largest expected reward (Exploitation). If there is a tie, pick the one with the smallest index.
+        Output: a: the index of the lever to pull. a is an integer scalar between 0 and n-1.
         '''
         #########################################
         ## INSERT YOUR CODE HERE
-
-
+        if np.random.random() <= self.e:
+            a = np.random.randint(0, self.n)
+        else:
+            a = np.argmax(self.Q)
 
         #########################################
         return a
 
-
-    #-----------------------------------------------------------------
-    def update(self, a,r):
+    # -----------------------------------------------------------------
+    def update(self, a, r):
         '''
             Update the parameters of the agent.
             (1) increase the count of lever
@@ -101,13 +111,12 @@ class Agent:
         '''
         #########################################
         ## INSERT YOUR CODE HERE
-
-
+        self.c[a] += 1
+        self.Q[a] = (self.Q[a] * (self.c[a] - 1) + r) / self.c[a]
 
         #########################################
 
-
-    #-----------------------------------------------------------------
+    # -----------------------------------------------------------------
     def play(self, g, n_steps=1000):
         '''
             Play the game for n_steps steps. In each step,
@@ -120,10 +129,9 @@ class Agent:
         '''
         #########################################
         ## INSERT YOUR CODE HERE
-
-
-
+        for _ in xrange(n_steps):
+            a = self.forward()
+            r = g.step(a)
+            self.update(a, r)
 
         #########################################
-
-

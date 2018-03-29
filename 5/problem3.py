@@ -2,7 +2,8 @@ import math
 import numpy as np
 from problem2 import Agent
 import gym
-#-------------------------------------------------------------------------
+
+# -------------------------------------------------------------------------
 '''
     Problem 3: Reinforcement Learning Problem (Q-Learning) 
     In this problem, you will implement an AI player for the frozen lake game.
@@ -20,12 +21,13 @@ import gym
 '''
 
 
-#-------------------------------------------------------
+# -------------------------------------------------------
 class QLearner(Agent):
     '''The agent is trying to maximize the sum of rewards (payoff) in the game using Q-Learning method. 
        The agent will 
                 (1) with a small probability (epsilon or e), randomly choose an action with a uniform distribution on all actions (Exploration); 
                 (2) with a big probability (1-e) to choose the action with the largest expected reward (Exploitation). If there is a tie, pick the one with the smallest index.'''
+
     # ----------------------------------------------
     def __init__(self, n=4, n_s=16, e=0.1):
         ''' Initialize the agent. 
@@ -42,12 +44,12 @@ class QLearner(Agent):
         '''
         #########################################
         ## INSERT YOUR CODE HERE
-
+        super(QLearner, self).__init__(n, n_s, e)
 
         #########################################
 
-    #-----------------------------------------------------------------
-    def update(self,s,a,r,s_new, gamma=.95, lr=.1):
+    # -----------------------------------------------------------------
+    def update(self, s, a, r, s_new, gamma=.95, lr=.1):
         '''
             Estimate the parameters of the agent using Bellman Equation.
             Q(s,a) = Expectation of ( r + gamma * max(Q(s_new,a')) )
@@ -63,14 +65,12 @@ class QLearner(Agent):
         '''
         #########################################
         ## INSERT YOUR CODE HERE
-
+        self.Q[s, a] = self.Q[s, a] + lr * (r + gamma * max(self.Q[s_new]) - self.Q[s, a])
 
         #########################################
 
-
- 
-    #--------------------------
-    def play(self, env, n_episodes, render =False,gamma=.95, lr=.1):
+    # --------------------------
+    def play(self, env, n_episodes, render=False, gamma=.95, lr=.1):
         '''
             Given a game environment of gym package, play multiple episodes of the game.
             An episode is over when the returned value for "done"= True.
@@ -88,25 +88,22 @@ class QLearner(Agent):
         total_rewards = 0.
         # play multiple episodes
         for _ in xrange(n_episodes):
-            s = env.reset() # initialize the episode 
+            s = env.reset()  # initialize the episode
             done = False
             # play the game until the episode is done
             while not done:
                 if render:
-                    env.render() # render the game
+                    env.render()  # render the game
                 #########################################
                 ## INSERT YOUR CODE HERE
 
                 # agent selects an action
-
+                a = np.random.randint(0, 4)
+                s_new, r, done, _ = env.step(a)
                 # game return a reward and new state
 
                 # agent update the parameters
-
+                self.update(s, a, r, s_new, gamma, lr)
                 #########################################
-                total_rewards += r # assuming the reward of the step is r
+                total_rewards += r  # assuming the reward of the step is r
         return total_rewards
-
-
-
-

@@ -1,7 +1,7 @@
 import math
 import numpy as np
 
-#-------------------------------------------------------------------------
+# -------------------------------------------------------------------------
 '''
     Problem 2: Contextual bandit problem 
     In this problem, you will implement an AI player for contextual multi-armed bandit problem epsilon-greedy method.
@@ -9,11 +9,13 @@ import numpy as np
     You could test the correctness of your code by typing `nosetests test2.py` in the terminal.
 '''
 
-#-------------------------------------------------------
+
+# -------------------------------------------------------
 class CBandit:
     '''CBandit is a Contextual Multi-armed bandit machine. The odds of the winning for each lever also depends on the context (the state) of the machine. 
         For example, the machine can have two states, say a green light on the screen, or a red light on the screen. 
         The state of the machine can be observed by the player. '''
+
     # ----------------------------------------------
     def __init__(self, p):
         ''' Initialize the game. 
@@ -28,8 +30,9 @@ class CBandit:
         '''
         #########################################
         ## INSERT YOUR CODE HERE
-
-
+        self.p = p
+        self.n_s = p.shape[0]
+        self.s = 0
 
         #########################################
 
@@ -49,18 +52,23 @@ class CBandit:
         #########################################
         ## INSERT YOUR CODE HERE
 
-
-
+        if np.random.random() >= self.p[self.s, a]:
+            r = 0.
+        else:
+            r = 1.
+        s = np.random.randint(0, self.n_s)
+        # self.s = s
         #########################################
         return r, s
 
 
-#-------------------------------------------------------
+# -------------------------------------------------------
 class Agent(object):
     '''The agent is trying to maximize the sum of rewards (payoff) in the game using epsilon-greedy method. 
        The agent will 
                 (1) with a small probability (epsilon or e), randomly pull a lever with a uniform distribution on all levers (Exploration); 
                 (2) with a big probability (1-e) to pull the arm with the largest expected reward (Exploitation). If there is a tie, pick the one with the smallest index.'''
+
     # ----------------------------------------------
     def __init__(self, n, n_s, e=0.1):
         ''' Initialize the agent. 
@@ -77,13 +85,15 @@ class Agent(object):
         '''
         #########################################
         ## INSERT YOUR CODE HERE
-
-
+        self.n = n
+        self.e = e
+        self.Q = np.zeros(shape=(n_s, n))
+        self.c = np.zeros(shape=(n_s, n))
 
         #########################################
 
-   # ----------------------------------------------
-    def forward(self,s):
+    # ----------------------------------------------
+    def forward(self, s):
         '''
             The policy function of the agent.
             Inputs:
@@ -93,16 +103,16 @@ class Agent(object):
         '''
         #########################################
         ## INSERT YOUR CODE HERE
-
-
-
+        if np.random.random() <= self.e:
+            a = np.random.randint(0, self.n)
+        else:
+            a = np.argmax(self.Q[s])
 
         #########################################
         return a
 
-
-    #-----------------------------------------------------------------
-    def update(self,s,a,r):
+    # -----------------------------------------------------------------
+    def update(self, s, a, r):
         '''
             Update the parameters of the agent.
             (1) increase the count of lever
@@ -114,15 +124,13 @@ class Agent(object):
         '''
         #########################################
         ## INSERT YOUR CODE HERE
-
-
-
+        self.c[s, a] += 1
+        self.Q[s, a] = float(self.Q[s, a] * (self.c[s, a] - 1) + r) / self.c[s, a]
 
         #########################################
 
-
-    #-----------------------------------------------------------------
-    def play(self, g, n_steps=1000):
+    # -----------------------------------------------------------------
+    def play(self, g, n_steps=100000):
         '''
             Play the game for n_steps steps. In each step,
             (1) pull a lever and receive the reward and the state from the game
@@ -132,16 +140,13 @@ class Agent(object):
                 n_steps: number of steps to play in the game, an integer scalar. 
             Note: please do NOT use g.p in the agent. The agent can only call the g.step() function.
         '''
-        s = g.s # initial state of the game
+        s = g.s  # initial state of the game
         #########################################
         ## INSERT YOUR CODE HERE
-
-
-
-
-
+        for _ in xrange(n_steps):
+            a = self.forward(s)
+            old_s = s
+            r, s = g.step(a)
+            self.update(old_s, a, r)
 
         #########################################
-
-
-
