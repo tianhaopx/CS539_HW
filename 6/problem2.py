@@ -1,12 +1,14 @@
 import numpy as np
-#-------------------------------------------------------------------------
+
+# -------------------------------------------------------------------------
 '''
     Problem 2: PageRank Algorithm (Markov Chain and Stationary Probability Distribution) 
     In this problem, we implement the pagerank algorithm, which create a markov chain and use random walk to compute the stationary probability distribution.
     You could test the correctness of your code by typing `nosetests -v test2.py` in the terminal.
 '''
 
-#--------------------------
+
+# --------------------------
 def compute_S(A):
     '''
         compute the transition matrix S from addjacency matrix A, which solves sink node problem by filling the all-zero columns in A.
@@ -20,15 +22,20 @@ def compute_S(A):
     '''
     #########################################
     ## INSERT YOUR CODE HERE
+    S = np.zeros(A.shape)
+    n = A.shape[0]
+    A_sum = sum(A)
+    for i in xrange(n):
+        for j in xrange(n):
+            S[j, i] = float(1) / n if A_sum[0, i] == 0 else A[j, i] / A_sum[0, i]
 
-
-
-
+    S = np.asmatrix(S)
     #########################################
     return S
 
-#--------------------------
-def compute_G(S, alpha = 0.95):
+
+# --------------------------
+def compute_G(S, alpha=0.95):
     '''
         compute the pagerank transition Matrix G from matrix S, which solves the sing region problem.
         G[j][i] represents the probability of moving from node i to node j.
@@ -42,15 +49,13 @@ def compute_G(S, alpha = 0.95):
     '''
     #########################################
     ## INSERT YOUR CODE HERE
-
-
-
+    n = S.shape[0]
+    G = alpha * S + (1 - alpha) * np.mat(np.ones(S.shape) / float(n))
     #########################################
     return G
 
 
-
-#--------------------------
+# --------------------------
 def random_walk_one_step(G, x_i):
     '''
         compute the result of one step random walk.
@@ -62,13 +67,12 @@ def random_walk_one_step(G, x_i):
     '''
     #########################################
     ## INSERT YOUR CODE HERE
-
-
+    x_i_plus_1 = G * x_i
     #########################################
     return x_i_plus_1
 
 
-#--------------------------
+# --------------------------
 def random_walk(G, x_0, max_steps=10000):
     '''
         compute the result of multi-step random walk until reaching stationary distribution. 
@@ -84,16 +88,22 @@ def random_walk(G, x_0, max_steps=10000):
     '''
     #########################################
     ## INSERT YOUR CODE HERE
-
-
-
-
-
+    n_steps = 0
+    flag = False
+    x = x_0
+    for i in xrange(max_steps):
+        if flag:
+            break
+        x_ = x
+        x = G * x
+        flag = np.allclose(x, x_, atol=1e-4)
+        n_steps += 1
     #########################################
     return x, n_steps
 
-#--------------------------
-def pagerank(A, alpha = 0.95):
+
+# --------------------------
+def pagerank(A, alpha=0.95):
     ''' 
         The final PageRank algorithm, which solves both the sink node problem and sink region problem.
         Given an adjacency matrix A, compute the pagerank score (stationary probability distribution) in the network. 
@@ -103,22 +113,14 @@ def pagerank(A, alpha = 0.95):
         Output: 
                 x: the stationary probability distribution, a numpy vector of float values, such as np.array([[.3], [.5], [.2]])
     '''
-    
-    # Initialize the score vector with all one values
-    num_nodes, _ = A.shape # get the number of nodes (n)
 
-    x_0 =  np.ones((num_nodes,1))/num_nodes # create a unique distribution as the initial probablity distribution.
+    # Initialize the score vector with all one values
+    num_nodes, _ = A.shape  # get the number of nodes (n)
+
+    x_0 = np.ones((num_nodes, 1)) / num_nodes  # create a unique distribution as the initial probablity distribution.
 
     #########################################
     ## INSERT YOUR CODE HERE
-
-
-
-
-
-
-
-
+    x, _ = random_walk(compute_G(compute_S(A), alpha), x_0)
     #########################################
     return x
-

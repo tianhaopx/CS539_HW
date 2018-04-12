@@ -216,7 +216,7 @@ def test_E_step():
 #-------------------------------------------------------------------------
 def test_update_I():
     ''' (5 points) update_I'''
-    g=[[.1,.9],[.2,.8]]
+    g=np.array([[.1,.9],[.2,.8]])
     I = update_I(g)
     assert np.allclose(I,[.1,.9],atol=1e-1)
     

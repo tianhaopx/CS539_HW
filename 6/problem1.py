@@ -1,8 +1,9 @@
 import math
 import numpy as np
 from collections import Counter
+
 # Note: please don't add any new package, you should solve this problem using only the packages above.
-#-------------------------------------------------------------------------
+# -------------------------------------------------------------------------
 '''
     Problem 1: Naive Bayes Classifier (with discrete attributes)
     In this problem, you will implement the naive Bayes classification method. 
@@ -13,8 +14,9 @@ from collections import Counter
     Note: please don't use any existing package for classification problems, implement your own version.
 '''
 
-#-----------------------------------------------
-def prob_smooth(X,c=2,k=1):
+
+# -----------------------------------------------
+def prob_smooth(X, c=2, k=1):
     '''
         Estimate the probability distribution of a random variable with Laplace smoothing.
         Input:
@@ -28,17 +30,17 @@ def prob_smooth(X,c=2,k=1):
     '''
     #########################################
     ## INSERT YOUR CODE HERE
-
-
-
-
+    n = len(X)
+    P = np.zeros(c)
+    counter = Counter(X)
+    for i in xrange(c):
+        P[i] = float(counter[i] + k) / (n + c * k)
 
     #########################################
     return P
-    
 
 
-#--------------------------
+# --------------------------
 def class_prior(Y):
     '''
         Estimate the prior probability of Class labels: P(Class=y).
@@ -51,14 +53,18 @@ def class_prior(Y):
     '''
     #########################################
     ## INSERT YOUR CODE HERE
-
+    n = Y.shape[0]
+    counter = Counter(Y)
+    PY = np.zeros(2)
+    for i in xrange(2):
+        PY[i] = float(counter[i]) / n
 
     #########################################
     return PY
 
 
-#--------------------------
-def conditional_prob(X,Y,k=1):
+# --------------------------
+def conditional_prob(X, Y, k=1):
     '''
         Estimate the conditional probability of P(X=x|Class=y) for each value of attribute X given each class.
         Input:
@@ -74,16 +80,25 @@ def conditional_prob(X,Y,k=1):
     '''
     #########################################
     ## INSERT YOUR CODE HERE
+    Z = [[], []]
+    n = X.shape[0]
+    for i in xrange(n):
+        Z[Y[i]].append(X[i])
 
+    Z = np.asarray(Z)
 
+    PX_Y = np.zeros(shape=(2, 2))
 
+    for i in xrange(2):
+        for j in xrange(2):
+            PX_Y[i, j] = prob_smooth(Z[i], 2, k)[j]
 
     #########################################
     return PX_Y
 
 
-#--------------------------
-def train(X,Y,k=1):
+# --------------------------
+def train(X, Y, k=1):
     '''
         Training the model parameters on a training dataset.
         Input:
@@ -102,17 +117,16 @@ def train(X,Y,k=1):
     '''
     #########################################
     ## INSERT YOUR CODE HERE
-
-
-
-
-
+    p = X.shape[0]
+    PX_Y = [conditional_prob(X[i], Y, k) for i in xrange(p)]
+    PY = class_prior(Y)
+    PX_Y = np.asarray(PX_Y)
     #########################################
     return PX_Y, PY
 
 
-#--------------------------
-def inference(X,PY, PX_Y):
+# --------------------------
+def inference(X, PY, PX_Y):
     '''
         Given a trained model, predict the label of one test instance in the test dataset.
         Input:
@@ -130,16 +144,21 @@ def inference(X,PY, PX_Y):
     '''
     #########################################
     ## INSERT YOUR CODE HERE
+    p = X.shape[0]
+    Z = np.ones(2)
+    for i in xrange(p):
+        Z = Z * PX_Y[i, :, X[i]]
 
-
-
-
+    P = PY * Z
+    p_sum = sum(P)
+    Y = np.argmax(P)
+    P = P / p_sum
     #########################################
     return Y, P
 
 
-#--------------------------
-def predict(X,PY, PX_Y):
+# --------------------------
+def predict(X, PY, PX_Y):
     '''
         Given a trained model, predict the labels of test instances in the test dataset.
         Input:
@@ -157,12 +176,9 @@ def predict(X,PY, PX_Y):
     '''
     #########################################
     ## INSERT YOUR CODE HERE
-
-
-
-
-
-
+    n = X.shape[1]
+    Y = np.zeros(n)
+    for i in xrange(n):
+        Y[i] = inference(X[:, i], PY, PX_Y)[0]
     #########################################
     return Y
-

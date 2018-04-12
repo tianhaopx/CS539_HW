@@ -1,8 +1,9 @@
 import math
 import numpy as np
 from collections import Counter
+
 # Note: please don't add any new package, you should solve this problem using only the packages above.
-#-------------------------------------------------------------------------
+# -------------------------------------------------------------------------
 '''
     Problem 3: Hidden Markov Model (HMM)
     In this problem, you will implement a hidden markov model. 
@@ -11,8 +12,9 @@ from collections import Counter
     Hint: For details of HMM, please read: http://cs.rochester.edu/u/james/CSC248/Lec11.pdf
 '''
 
-#-----------------------------------------------
-def forward_prob(Ev,I,T,Em):
+
+# -----------------------------------------------
+def forward_prob(Ev, I, T, Em):
     '''
         Given a HMM and a sequence of evidence, compute the forward probability of the last hidden state (X_{n-1}) using Forward Algorithm: P(X_{n-1}, e0, e1, ..., e_{n-1}), return the state of Xt with the maximium probability. Here e0 represents the observed evidence at step 0. n is the number of steps in total.
         Input:
@@ -32,18 +34,24 @@ def forward_prob(Ev,I,T,Em):
     '''
     #########################################
     ## INSERT YOUR CODE HERE
-     
+    n = Ev.shape[0]
+    c = I.shape[0]
 
+    a_prev = [I[i] * Em[i, Ev[0]] for i in xrange(c)]
+    a_prev = np.asarray(a_prev)
 
+    for i in xrange(1, n):
+        a_new = [Em[k, Ev[i]] * sum([a_prev[j] * T[j, k] for j in xrange(c)]) for k in xrange(c)]
+        a_prev = a_new
 
-
-
+    a = np.copy(a_prev)
+    X = np.argmax(a)
     #########################################
     return X, a
 
 
-#-----------------------------------------------
-def backward_prob(Ev,T,Em):
+# -----------------------------------------------
+def backward_prob(Ev, T, Em):
     '''
         Given a HMM and a sequence of evidence, compute the backward probability of the first hidden state (X_0) using Backward Algorithm: P(e1, ..., e_{n-1}| X_0 = i), return the state of X-0 with the maximium probability. Here e0 represents the observed evidence at step 0. n is the number of steps in total.
         Input:
@@ -61,19 +69,22 @@ def backward_prob(Ev,T,Em):
     '''
     #########################################
     ## INSERT YOUR CODE HERE
-     
+    n = Ev.shape[0]
+    c = T.shape[0]
 
+    b_prev = np.ones(c)
+    for i in xrange(n - 2, -1, -1):
+        b_new = [sum([b_prev[j] * Em[j, Ev[i + 1]] * T[k, j] for j in xrange(c)]) for k in xrange(c)]
+        b_prev = b_new
 
-
-
-
-
+    b = np.copy(b_prev)
+    X = np.argmax(b)
     #########################################
     return X, b
 
 
-#-----------------------------------------------
-def forward_backward_prob(Ev,I,T,Em,i):
+# -----------------------------------------------
+def forward_backward_prob(Ev, I, T, Em, i):
     '''
         Given a HMM and a sequence of evidence, compute the forward-backward probability of the i-th hidden state (X_i) using Forward-Backward Algorithm: P(X_i, e0, e1, ..., e_{n-1}), return the state of Xi with the maximium probability. Here e0 represents the observed evidence at step 0. n is the number of steps in total.
         Input:
@@ -98,18 +109,16 @@ def forward_backward_prob(Ev,I,T,Em,i):
     '''
     #########################################
     ## INSERT YOUR CODE HERE
-
-
-
-
-
-
+    a = forward_prob(Ev[:i + 1], I, T, Em)[1]
+    b = backward_prob(Ev[i:], T, Em)[1]
+    p = a * b
+    X = np.argmax(p)
     #########################################
     return X, p, a, b
 
 
-#-----------------------------------------------
-def most_probable_pass(Ev,I,T,Em):
+# -----------------------------------------------
+def most_probable_pass(Ev, I, T, Em):
     '''
         Given a HMM and a sequence of evidence, compute the most probable path of the hidden states using Viterbi Algorithm.
         Input:
@@ -128,30 +137,16 @@ def most_probable_pass(Ev,I,T,Em):
     '''
     #########################################
     ## INSERT YOUR CODE HERE
-    
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+    n = Ev.shape[0]
+    X = np.zeros(n)
+    for i in xrange(n):
+        X[i] = forward_backward_prob(Ev, I, T, Em, i)[0]
     #########################################
     return X
-    
 
 
-
-#-----------------------------------------------
-def compute_gamma(Ev,I,T,Em):
+# -----------------------------------------------
+def compute_gamma(Ev, I, T, Em):
     '''
         Given a HMM and a sequence of evidence, estimate the parameter of HMM with the highest likelihood of observing the sequence using EM (Baum-Welch) Algorithm. Compute the gamma values for the E-step of EM algorithm.
         Input:
@@ -172,27 +167,22 @@ def compute_gamma(Ev,I,T,Em):
     '''
     #########################################
     ## INSERT YOUR CODE HERE
-
-
-
-
-
-
-
-
-
-
-
-
-
+    n = Ev.shape[0]
+    c = I.shape[0]
+    gamma = np.zeros(shape=(n, c))
+    alpha = np.zeros(shape=(n, c))
+    beta = np.zeros(shape=(n, c))
+    for i in xrange(n):
+        X, p, a, b = forward_backward_prob(Ev, I, T, Em, i)
+        alpha[i] = a
+        beta[i] = b
+        gamma[i] = (a * b) / sum(a * b)
     #########################################
-    return gamma, alpha, beta 
+    return gamma, alpha, beta
 
 
-
-
-#-----------------------------------------------
-def compute_xi(Ev,T,Em,alpha,beta):
+# -----------------------------------------------
+def compute_xi(Ev, T, Em, alpha, beta):
     '''
         Given a HMM and a sequence of evidence, estimate the parameter of HMM with the highest likelihood of observing the sequence using EM (Baum-Welch) Algorithm. Compute the xi values for the E-step of EM algorithm.
         Input:
@@ -213,23 +203,20 @@ def compute_xi(Ev,T,Em,alpha,beta):
     '''
     #########################################
     ## INSERT YOUR CODE HERE
-
-
-
-
-
-
-
-
-
-
+    n = Ev.shape[0]
+    c = T.shape[0]
+    xi = np.zeros(shape=(n - 1, c, c))
+    for t in xrange(n - 1):
+        sum_ = sum([alpha[t, i] * T[i, j] * beta[t + 1, j] * Em[j, Ev[t + 1]] for i in xrange(c) for j in xrange(c)])
+        for i in xrange(c):
+            for j in xrange(c):
+                xi[t, i, j] = alpha[t, i] * beta[t + 1, j] * T[i, j] * Em[j, Ev[t + 1]] / sum_
     #########################################
-    return xi 
+    return xi
 
 
-
-#-----------------------------------------------
-def E_step(Ev,I,T,Em):
+# -----------------------------------------------
+def E_step(Ev, I, T, Em):
     '''
         Given a HMM and a sequence of evidence, estimate the parameter of HMM with the highest likelihood of observing the sequence using EM (Baum-Welch) Algorithm. This function is the E-step of EM algorithm.
         Input:
@@ -248,17 +235,13 @@ def E_step(Ev,I,T,Em):
     '''
     #########################################
     ## INSERT YOUR CODE HERE
-
-
-
-
-
+    gamma, alpha, beta = compute_gamma(Ev, I, T, Em)
+    xi = compute_xi(Ev, T, Em, alpha, beta)
     #########################################
     return gamma, xi
 
 
-
-#-----------------------------------------------
+# -----------------------------------------------
 def update_I(gamma):
     '''
         In the M-step of EM algorithm, update initial probabilities with gamma values.
@@ -270,17 +253,13 @@ def update_I(gamma):
     '''
     #########################################
     ## INSERT YOUR CODE HERE
-
-
-
+    I = gamma[0]
     #########################################
     return I
 
 
-
-
-#-----------------------------------------------
-def update_T(gamma,xi):
+# -----------------------------------------------
+def update_T(gamma, xi):
     '''
         In the M-step of EM algorithm, update transition probabilities with gamma values.
         Input:
@@ -294,17 +273,19 @@ def update_T(gamma,xi):
     '''
     #########################################
     ## INSERT YOUR CODE HERE
-
-
-
-
-
-
+    n, c = gamma.shape
+    T = np.zeros(shape=(c, c))
+    for i in xrange(c):
+        T[i] = sum([xi[t, i, :] for t in xrange(n - 1)]) / sum([gamma[t, i] for t in xrange(n)])
+    s = [sum(T[i]) for i in xrange(c)]
+    for i in xrange(c):
+        T[i] = T[i] / s[i]
     #########################################
-    return T 
+    return T
 
-#-----------------------------------------------
-def update_Em(Ev,gamma,p):
+
+# -----------------------------------------------
+def update_Em(Ev, gamma, p):
     '''
         In the M-step of EM algorithm, update emission probabilities with gamma values.
         Input:
@@ -319,20 +300,22 @@ def update_Em(Ev,gamma,p):
     '''
     #########################################
     ## INSERT YOUR CODE HERE
-   
-
-
-
-
-
+    n, c = gamma.shape
+    Em = np.zeros(shape=(c, p))
+    for i in xrange(c):
+        sum_ = sum(gamma[:, i])
+        for j in xrange(p):
+            e = 0.
+            for k in xrange(n):
+                if Ev[k] == j:
+                    e += gamma[k, i]
+            Em[i, j] = e / sum_
     #########################################
-    return Em 
+    return Em
 
 
-
-
-#-----------------------------------------------
-def M_step(Ev, gamma,xi,p):
+# -----------------------------------------------
+def M_step(Ev, gamma, xi, p):
     '''
         Given a HMM and a sequence of evidence, estimate the parameter of HMM with the highest likelihood of observing the sequence using EM (Baum-Welch) Algorithm. This function is the M-step of EM algorithm.
         Input:
@@ -352,21 +335,15 @@ def M_step(Ev, gamma,xi,p):
     '''
     #########################################
     ## INSERT YOUR CODE HERE
-
-
-
-
-
-
+    I = update_I(gamma)
+    T = update_T(gamma, xi)
+    Em = update_Em(Ev, gamma, p)
     #########################################
-    return I, T, Em 
+    return I, T, Em
 
 
-
-
-
-#-----------------------------------------------
-def EM(Ev,c,p, num_iter=10):
+# -----------------------------------------------
+def EM(Ev, c, p, num_iter=10):
     '''
         Given a HMM and a sequence of evidence, estimate the parameter of HMM with the highest likelihood of observing the sequence using EM (Baum-Welch) Algorithm.
         Input:
@@ -385,24 +362,17 @@ def EM(Ev,c,p, num_iter=10):
 
     # initialize parameters 
     # (This is for testing purpose. In real-world cases, we should randomly initialize the parameters.)
-    I = np.arange(float(c))+1.
-    I = I /sum(I)
-    T = np.arange(float(c*c)).reshape((c,c))+1.
+    I = np.arange(float(c)) + 1.
+    I = I / sum(I)
+    T = np.arange(float(c * c)).reshape((c, c)) + 1.
     for i in xrange(c):
-        T[i] = T[i]/sum(T[i])
-    Em = np.ones((c,p))/p
+        T[i] = T[i] / sum(T[i])
+    Em = np.ones((c, p)) / p
 
     #########################################
     ## INSERT YOUR CODE HERE
-
-
-
-
-
-
+    for _ in xrange(num_iter):
+        gamma, xi = E_step(Ev, I, T, Em)
+        I, T, Em = M_step(Ev, gamma, xi, p)
     #########################################
-    return I,T,Em
-
-
-
-
+    return I, T, Em
